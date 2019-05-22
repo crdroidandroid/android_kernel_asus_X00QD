@@ -30,6 +30,7 @@
 #include <linux/irqchip.h>
 #include <linux/irqchip/arm-gic-v3.h>
 #include <linux/syscore_ops.h>
+#include <linux/spmi.h>
 #include <linux/irqchip/msm-mpm-irq.h>
 //ASUS_BSP +++
 #include <linux/wakeup_reason.h>
@@ -481,7 +482,7 @@ static void gic_show_resume_irq(struct gic_chip_data *gic)
 	}
 	gic_irq_cnt=0;
 //ASUS_BSP --- [PM]reset IRQ count and IRQ number every time.
-	if (!msm_show_resume_irq_mask)
+	if (!spmi_show_resume_irq())
 		return;
 
 	for (i = 0; i * 32 < gic->irq_nr; i++) {
