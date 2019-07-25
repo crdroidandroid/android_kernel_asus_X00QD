@@ -245,5 +245,9 @@ extern bool under_scm_call(void)
 {
 	return false;
 }
+extern bool under_scm_call(void)
+{
+	return false;
+}
 #endif
 #endif
