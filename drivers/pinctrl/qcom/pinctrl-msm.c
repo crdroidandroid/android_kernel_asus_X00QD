@@ -72,6 +72,7 @@ struct msm_pinctrl {
 	void __iomem *regs;
 };
 
+int g_resume_from_fp = 0;
 static struct msm_pinctrl *msm_pinctrl_data;
 
 static inline struct msm_pinctrl *to_msm_pinctrl(struct gpio_chip *gc)

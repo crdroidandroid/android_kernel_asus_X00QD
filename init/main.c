@@ -129,6 +129,8 @@ static char *initcall_command_line;
 static char *execute_command;
 static char *ramdisk_execute_command;
 
+int g_ftm_mode = 0;
+EXPORT_SYMBOL(g_ftm_mode);
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
