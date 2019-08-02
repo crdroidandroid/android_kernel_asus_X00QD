@@ -1508,7 +1508,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 #ifndef ASUS_ZC600KL_PROJECT
 	g_asus_lcd_power_off = false;
 #ifdef ASUS_ZE620KL_PROJECT
-	//fts_ts_resume();
+	fts_ts_resume();
 #endif
 #endif
 
