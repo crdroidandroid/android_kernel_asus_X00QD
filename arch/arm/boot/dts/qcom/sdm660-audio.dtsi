@@ -180,6 +180,15 @@
 };
 
 &soc {
+	tert_mi2s_gpios: tert_mi2s_pinctrl {
+		compatible = "qcom,msm-cdc-pinctrl";
+		pinctrl-names = "aud_active", "aud_sleep";
+		pinctrl-0 = <&ter_mi2s_clk_active &ter_mi2s_ws_active
+			&ter_mi2s_sd0_active &ter_mi2s_sd1_active>;
+		pinctrl-1 = <&ter_mi2s_clk_sleep &ter_mi2s_ws_sleep
+			&ter_mi2s_sd0_sleep &ter_mi2s_sd1_sleep>;
+		qcom,lpi-gpios;
+	};
 	cdc_pdm_gpios: cdc_pdm_pinctrl {
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
@@ -197,6 +206,7 @@
 	};
 
 	cdc_dmic_gpios: cdc_dmic_pinctrl {
+		status = "disabled";
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&cdc_dmic12_gpios_active
@@ -207,6 +217,7 @@
 	};
 
 	cdc_sdw_gpios: sdw_clk_data_pinctrl {
+	      status = "disabled";
 	      compatible = "qcom,msm-cdc-pinctrl";
 	      pinctrl-names = "aud_active", "aud_sleep";
 	      pinctrl-0 = <&sdw_clk_active &sdw_data_active>;
@@ -214,6 +225,7 @@
 	};
 
 	wsa_spkr_en1: wsa_spkr_en1_pinctrl {
+              status = "disabled";
 	      compatible = "qcom,msm-cdc-pinctrl";
 	      pinctrl-names = "aud_active", "aud_sleep";
 	      pinctrl-0 = <&spkr_1_sd_n_active>;
@@ -221,6 +233,7 @@
 	};
 
 	wsa_spkr_en2: wsa_spkr_en2_pinctrl {
+              status = "disabled";
 	      compatible = "qcom,msm-cdc-pinctrl";
 	      pinctrl-names = "aud_active", "aud_sleep";
 	      pinctrl-0 = <&spkr_2_sd_n_active>;
