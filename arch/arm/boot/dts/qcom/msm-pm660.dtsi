@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2017, 2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -50,13 +50,17 @@
 				qcom,pon-type = <0>;
 				qcom,pull-up = <1>;
 				linux,code = <116>;
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <10256>;
+				qcom,s2-timer = <10>;
+				qcom,s2-type = <4>;
 			};
 
-			qcom,pon_2 {
-				qcom,pon-type = <1>;
-				qcom,pull-up = <1>;
-				linux,code = <114>;
-			};
+//			qcom,pon_2 {
+//				qcom,pon-type = <1>;
+//				qcom,pull-up = <1>;
+//				linux,code = <114>;
+//			};
 		};
 
 		qcom,temp-alarm@2400 {
@@ -85,15 +89,29 @@
 			gpio@c100 {
 				reg = <0xc100 0x100>;
 				qcom,pin-num = <2>;
-				status = "disabled";
+//ASUS_BSP LiJen config PMIC GPIO2 to ADC channel +++
+				status = "okay";
+				qcom,mode = <3>; /* Analog Pass Through */
+				qcom,pull = <5>; /* Input No pull */
+				qcom,vin-sel = <0>; /* VIN0 */
+				qcom,src-sel = <0>; /* Constant */
+				qcom,master-en = <0>; /* Eanble GPIO */
+//ASUS_BSP LiJen config PMIC GPIO2 to ADC channel ---
 			};
 
+			//bsp: charger id vadc reading +++
 			gpio@c200 {
 				reg = <0xc200 0x100>;
 				qcom,pin-num = <3>;
-				status = "disabled";
+				status = "okay";
+				qcom,mode = <3>; /* Analog Pass Through */
+				qcom,pull = <5>; /* Input No pull */
+				qcom,vin-sel = <0>; /* VIN0 */
+				qcom,src-sel = <0>; /* Constant */
+				qcom,master-en = <0>; /* Eanble GPIO */
 			};
-
+			//bsp: charger id vadc reading ---
+			
 			gpio@c300 {
 				reg = <0xc300 0x100>;
 				qcom,pin-num = <4>;
@@ -158,6 +176,7 @@
 		pm660_coincell: qcom,coincell@2800 {
 			compatible = "qcom,qpnp-coincell";
 			reg = <0x2800 0x100>;
+			qcom,charge-enable=<0>; //ASUS_BSP LiJen Ara HW not support
 		};
 
 		pm660_rtc: qcom,pm660_rtc {
@@ -312,6 +331,112 @@
 				qcom,fast-avg-setup = <0>;
 				qcom,cal-val = <0>;
 			};
+			/* ASUS_BSP (ShowCai) +++ for thermal */
+			chan@50 {
+				label = "asus_pa_therm1";
+				reg = <0x50>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <2>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			
+			chan@52 {
+				label = "asus_skin_therm";
+				reg = <0x51>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <2>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			
+			chan@4b {
+				label = "asus_top_center_therm";
+				reg = <0x4d>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <2>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			
+			chan@53 {
+				label = "asus_bot_center_therm";
+				reg = <0x4e>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <2>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			
+			chan@4a {
+				label = "asus_pa_therm";
+				reg = <0x4f>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <2>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			
+			han@1e {
+				label = "asus_die_temp";
+				reg = <0x1d>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <3>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+				qcom,cal-val = <0>;
+			};
+			/* ASUS_BSP (ShowCai) --- for thermal */
+//ASUS_BSP LiJen config PMIC GPIO2 to ADC channel +++
+			chan@32 {
+				label = "gpio2_adc_tds";
+				reg = <0x32>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@72 {
+				label = "gpio2_adc_wp";
+				reg = <0x72>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+//ASUS_BSP LiJen config PMIC GPIO2 to ADC channel ---
+
+			//bsp: GPIO3 charger id vadc reading +++
+			chan@13 {
+				label = "gpio3_adc";
+				reg = <0x13>;
+				qcom,decimation = <2>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <2>;
+				qcom,fast-avg-setup = <0>;
+			};
+			//bsp: GPIO3 harger id vadc reading ---
+			
+
 		};
 
 		pm660_charger: qcom,qpnp-smb2 {
@@ -336,6 +461,15 @@
 			qcom,thermal-mitigation
 					= <3000000 2500000 2000000 1500000
 						1000000 500000>;
+
+			// ASUS setting +++
+			qcom,fcc-max-ua = <3000000>;
+			qcom,fv-max-uv = <4380000>;
+			qcom,usb-icl-ua = <1000000>;
+			qcom,float-option = <1>;
+			qcom,pm-gpio3-vadc = <&pm660_vadc>;  //charger id vadc reading
+			// ASUS setting ---
+
 
 			qcom,chgr@1000 {
 				reg = <0x1000 0x100>;
@@ -472,7 +606,8 @@
 					  "msg-rx-discarded";
 
 			qcom,default-sink-caps = <5000 3000>, /* 5V @ 3A */
-						 <9000 3000>; /* 9V @ 3A */
+						 <7500 2000>, /* 7.5V @ 2A */
+						 <9000 1670>; /* 9V @ 1.67A */
 		};
 
 		pm660_adc_tm: vadc@3400 {
@@ -530,6 +665,17 @@
 				qcom,btm-channel-number = <0x78>;
 				qcom,thermal-node;
 			};
+//ASUS_BSP LiJen config PMIC GPIO2 VADC_BTM channel +++
+			chan@72 {
+				label = "gpio2_adc_tm";
+				reg = <0x72>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <2>;
+				qcom,btm-channel-number = <0x80>;
+			};
+//ASUS_BSP LiJen config PMIC GPIO2 VADC_BTM channel ---
 		};
 
 		pm660_rradc: rradc@4500 {
@@ -554,7 +700,21 @@
 			qcom,fg-esr-timer-awake = <96 96>;
 			qcom,fg-esr-timer-asleep = <256 256>;
 			qcom,fg-esr-timer-charging = <0 96>;
+			qcom,fg-rsense-sel = <0>; 
 			qcom,cycle-counter-en;
+
+			qcom,fg-recharge-voltage = <4150>;  //WeiYu ++ for HW recharge
+			qcom,fg-chg-term-current = <100>;
+			qcom,fg-sys-term-current = <(-150)>;
+			qcom,hold-soc-while-full;
+			qcom,linearize-soc; //ASUS_BSP
+			qcom,fg-force-load-profile;
+
+			qcom,fg-jeita-thresholds = <0 10 50 60>;
+			qcom,fg-jeita-hyst-temp = <3>;
+			qcom,pm-gpio2-vadc = <&pm660_vadc>; //ASUS_BSP LiJen config PMIC GPIO2 to ADC channel
+			qcom,pm-gpio2-adc_tm = <&pm660_adc_tm>; //ASUS_BSP LiJen config PMIC GPIO2 VADC_BTM channel
+
 			status = "okay";
 
 			qcom,fg-batt-soc@4000 {
@@ -629,25 +789,33 @@
 		#address-cells = <2>;
 		#size-cells = <0>;
 
-		pm660_haptics: qcom,haptics@c000 {
-			compatible = "qcom,qpnp-haptics";
+		pm660_haptics: qcom,haptic@c000 {
+			compatible = "qcom,qpnp-haptic";
 			reg = <0xc000 0x100>;
 			interrupts = <0x1 0xc0 0x0 IRQ_TYPE_EDGE_BOTH>,
-					<0x1 0xc0 0x1 IRQ_TYPE_EDGE_BOTH>;
-			interrupt-names = "hap-sc-irq", "hap-play-irq";
+				     <0x1 0xc0 0x1 IRQ_TYPE_EDGE_BOTH>;
+			interrupt-names = "sc-irq", "play-irq";
 			qcom,pmic-revid = <&pm660_revid>;
 			qcom,pmic-misc = <&pm660_misc>;
 			qcom,misc-clk-trim-error-reg = <0xf3>;
-			qcom,actuator-type = <0>;
+			qcom,timeout-ms = <120000>;
+			qcom,actuator-type = "lra";
 			qcom,play-mode = "direct";
-			qcom,vmax-mv = <3200>;
+			qcom,vmax-mv = <2784>;
 			qcom,ilim-ma = <800>;
-			qcom,sc-dbc-cycles = <8>;
-			qcom,wave-play-rate-us = <6667>;
+			qcom,wave-shape = "sine";
+			qcom,wave-play-rate-us = <4255>; //235Hz (0x30D40 / 0x353)
+			qcom,int-pwm-freq-khz = <505>;
+			qcom,sc-deb-cycles = <8>;
 			qcom,en-brake;
+			qcom,brake-pattern = [02 02 02 02];
 			qcom,lra-high-z = "opt0";
-			qcom,lra-auto-res-mode = "qwd";
-			qcom,lra-res-cal-period = <4>;
+			qcom,lra-auto-res-mode = "none";
+			qcom,lra-calibrate-at-eop = <0>;
+//			qcom,correct-lra-drive-freq;
+//			qcom,perform-lra-auto-resonance-search;
+//			qcom,lra-hw-auto-resonance;
+			qcom,time-required-to-generate-back-emf-us = <5000>;
 		};
 	};
 };
