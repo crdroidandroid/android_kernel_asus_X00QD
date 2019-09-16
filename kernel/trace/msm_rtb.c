@@ -35,6 +35,7 @@
 #define SENTINEL_BYTE_3 0xFF
 
 #define RTB_COMPAT_STR	"qcom,msm-rtb"
+extern int g_saving_rtb_log;
 
 /* Write
  * 1) 3 bytes sentinel
@@ -47,6 +48,7 @@
  *
  * Total = 40 bytes.
  */
+/*
 struct msm_rtb_layout {
 	unsigned char sentinel[3];
 	unsigned char log_type;
@@ -68,16 +70,16 @@ struct msm_rtb_state {
 	uint32_t filter;
 	int step_size;
 };
-
+*/
 #if defined(CONFIG_QCOM_RTB_SEPARATE_CPUS)
 DEFINE_PER_CPU(atomic_t, msm_rtb_idx_cpu);
 #else
 static atomic_t msm_rtb_idx;
 #endif
 
-static struct msm_rtb_state msm_rtb = {
+struct msm_rtb_state msm_rtb = {
 	.filter = 1 << LOGK_LOGBUF,
-	.enabled = 1,
+	.enabled = 0,
 };
 
 module_param_named(filter, msm_rtb.filter, uint, 0644);
@@ -97,7 +99,7 @@ static struct notifier_block msm_rtb_panic_blk = {
 
 int notrace msm_rtb_event_should_log(enum logk_event_type log_type)
 {
-	return msm_rtb.initialized && msm_rtb.enabled &&
+	return msm_rtb.initialized && msm_rtb.enabled && !g_saving_rtb_log &&
 		((1 << (log_type & ~LOGTYPE_NOPC)) & msm_rtb.filter);
 }
 EXPORT_SYMBOL(msm_rtb_event_should_log);
