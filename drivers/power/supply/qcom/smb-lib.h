@@ -74,6 +74,25 @@ enum print_reason {
 #define BOOST_BACK_STORM_COUNT	3
 #define WEAK_CHG_STORM_COUNT	8
 
+
+//bsp WeiYu: add asus defines +++
+#define QC_STATE_SOC_THD		70
+#define ASUS_QC_AC_ID			200
+#define ASUS_NORMAL_AC_ID		750
+#define ASUS_10W_ID			1000 // WeiYu:This should be used in charger only
+#define ASUS_ABOVE_13P5W_ID	2000 // WeiYu:This should be used in charger only
+
+#define COUNTRY_BR	1
+#define COUNTRY_IN	1
+#define COUNTRY_OTHER	2
+
+#define PD_POWER_DETECTION_DONE	5
+#define PD_POWER_LEVEL_HIGH	2		//for pd icon "++"
+#define PD_POWER_LEVEL_MEDIUM	1	//for pd icon "+"
+#define PD_POWER_LEVEL_DEFAULT	0	//for pd default charging icon
+#define PD_POWER_NOT_PD	-1			//reset state of pd_level, or pd_level not being judged yet
+//bsp WeiYu: add asus defines ---
+
 enum smb_mode {
 	PARALLEL_MASTER = 0,
 	PARALLEL_SLAVE,
@@ -310,7 +329,24 @@ struct smb_charger {
 	struct work_struct	legacy_detection_work;
 	struct delayed_work	uusb_otg_work;
 	struct delayed_work	bb_removal_work;
+//+Bug317384,zhaosidong.wt,ADD,20171108,add battery level control for ATO version	
+#ifdef WT_COMPILE_FACTORY_VERSION
+	struct delayed_work abnormal_detect; 
+#endif
+//-Bug317384,zhaosidong.wt,ADD,20171108,add battery level control for ATO version
 
+	/* asus work */
+	struct delayed_work	asus_chg_flow_work;
+	struct delayed_work	asus_adapter_adc_work;
+	struct delayed_work	asus_min_monitor_work;
+	struct delayed_work	asus_qc3_soft_start_work;
+	struct delayed_work asus_usb_alert_work;
+	struct delayed_work asus_low_impedance_work;
+	struct delayed_work asus_water_proof_work;
+	struct delayed_work asus_batt_RTC_work;
+	struct delayed_work asus_set_flow_flag_work;
+	struct delayed_work asus_rerun_DRP_work;
+	struct delayed_work read_countrycode_work;
 	/* cached status */
 	int			voltage_min_uv;
 	int			voltage_max_uv;
@@ -368,6 +404,17 @@ struct smb_charger {
 	int			usb_icl_delta_ua;
 	int			pulse_cnt;
 };
+
+//ASUS BSP : Add gpio control struct +++
+struct gpio_control {
+	u32 ADC_SW_EN;
+	u32 ADCPWREN_PMI_GP1;
+	u32 USB_THERMAL_ALERT;
+	u32 USB_LOW_IMPEDANCE;
+	u32	USB_LID_EN;
+	u32 USB_WATER_PROOF;
+};
+//ASUS BSP : Add gpio control struct ---
 
 int smblib_read(struct smb_charger *chg, u16 addr, u8 *val);
 int smblib_masked_write(struct smb_charger *chg, u16 addr, u8 mask, u8 val);
@@ -512,6 +559,9 @@ void smblib_suspend_on_debug_battery(struct smb_charger *chg);
 int smblib_rerun_apsd_if_required(struct smb_charger *chg);
 int smblib_get_prop_fcc_delta(struct smb_charger *chg,
 				union power_supply_propval *val);
+//+Bug 329838,baidabin.wt,MODIFY,2017-12-15, Add the fcc delta interface
+int smblib_set_prop_fcc_delta(struct smb_charger *chg, int jeita_cc_delta_ua);
+//-Bug 329838,baidabin.wt,MODIFY,2017-12-15, Add the fcc delta interface
 int smblib_icl_override(struct smb_charger *chg, bool override);
 int smblib_dp_dm(struct smb_charger *chg, int val);
 int smblib_disable_hw_jeita(struct smb_charger *chg, bool disable);
