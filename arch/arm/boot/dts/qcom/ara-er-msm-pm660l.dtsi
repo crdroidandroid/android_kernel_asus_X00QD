@@ -203,14 +203,14 @@
 				qcom,default-state = "off";
 				linux,name = "red";
 //ASUS_BSP Peter: Disable breath function +++
-/*
 				qcom,start-idx = <0>;
-				qcom,idx-len = <22>;
-				qcom,duty-pcts =
-					[01 0a 14 1e 28 32 3c 46 50 5a 64
-					64 5a 50 46 3c 32 28 1e 14 0a 01];
+				qcom,idx-len = <2>;
+				qcom,duty-pcts = [00 22];
+				qcom,lut-flags = <19>;
+				qcom,pause-lo = <3400>;
+				qcom,ramp-step-ms = <300>;
 				qcom,use-blink;
-*/
+
 //ASUS_BSP Peter: Disable breath function ---
 			};
 
@@ -223,6 +223,13 @@
 				qcom,max-current = <12>;
 				qcom,default-state = "off";
 				linux,name = "green";
+				qcom,start-idx = <0>;
+				qcom,idx-len = <2>;
+				qcom,lut-flags = <19>;
+				qcom,pause-lo = <1400>;
+				qcom,ramp-step-ms = <300>;
+				qcom,duty-pcts = [00 40];
+				qcom,use-blink;
 			};
 
 //ASUS_BSP Peter: Disable blue led because we do not have it in HW design +++
