@@ -4221,9 +4221,11 @@ static bool ADF_check_status(void)
 //ASUS BSP Add per min monitor jeita & thermal & typeC_DFP +++
 void smblib_asus_monitor_start(struct smb_charger *chg, int time)
 {
+	#ifdef JEITA_AMT_ENABLE
 	asus_flow_done_flag = 1;
 	cancel_delayed_work(&chg->asus_min_monitor_work);
 	schedule_delayed_work(&chg->asus_min_monitor_work, msecs_to_jiffies(time));
+	#endif
 }
 
 #define EN_BAT_CHG_EN_COMMAND_TRUE		0
@@ -7840,7 +7842,9 @@ int smblib_init(struct smb_charger *chg)
 //ASUS work +++
 	INIT_DELAYED_WORK(&chg->asus_chg_flow_work, asus_chg_flow_work);
 	INIT_DELAYED_WORK(&chg->asus_adapter_adc_work, asus_adapter_adc_work);
+	#ifdef JEITA_AMT_ENABLE
 	INIT_DELAYED_WORK(&chg->asus_min_monitor_work, asus_min_monitor_work);
+	#endif
 	INIT_DELAYED_WORK(&chg->asus_qc3_soft_start_work, asus_qc3_soft_start_work);	
 	INIT_DELAYED_WORK(&chg->asus_batt_RTC_work, asus_batt_RTC_work);
 	INIT_DELAYED_WORK(&chg->asus_set_flow_flag_work, asus_set_flow_flag_work);
