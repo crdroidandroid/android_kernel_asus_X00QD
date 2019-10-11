@@ -199,6 +199,7 @@
 			snps,disable-clk-gating;
 			snps,has-lpm-erratum;
 			snps,is-utmi-l1-suspend;
+			maximum-speed = "high-speed";
 			snps,hird-threshold = /bits/ 8 <0x0>;
 		};
 
