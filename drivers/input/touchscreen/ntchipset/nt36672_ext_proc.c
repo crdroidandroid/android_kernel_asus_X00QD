@@ -623,7 +623,7 @@ static struct proc_dir_entry *NVT_Custom_Glove_entry;
 
 long i64_GESTURE = 0;
 int nvt_gesture_enable=0;
-char msg[20];
+char msg[20]={0};
 static ssize_t nvtc_read_proc(struct file *filp, char __user *buf,size_t count, loff_t *f_pos)
 {
 	ssize_t retval=0;
