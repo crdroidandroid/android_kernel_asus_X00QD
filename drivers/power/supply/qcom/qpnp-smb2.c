@@ -2878,7 +2878,7 @@ void pinctrl_set_alert(struct platform_device *pdev, int setting)
 }
 
 
-#define COUNTRY_CODE_PATH "/factory/COUNTRY"
+#define COUNTRY_CODE_PATH "/mnt/vendor/factory/COUNTRY"
 
 // WeiYu: BR country code +++
 /*
