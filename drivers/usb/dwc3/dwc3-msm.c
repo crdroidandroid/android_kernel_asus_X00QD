@@ -3611,6 +3611,10 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 	if (on) {
 		dev_dbg(mdwc->dev, "%s: turn on host\n", __func__);
 
+		// ASUS_BSP +++
+		// We need to set this flag earlier so that we can
+		// apply correct eye-diagram parameters.
+		mdwc->hs_phy->flags |= PHY_HOST_MODE;
 		pm_runtime_get_sync(mdwc->dev);
 		if (mdwc->core_init_failed) {
 			dev_err(mdwc->dev, "%s: Core init failed\n", __func__);
