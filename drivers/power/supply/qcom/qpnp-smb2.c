@@ -3006,6 +3006,13 @@ void read_BR_countrycode_work(struct work_struct *work)
     	int readlen = 0;
 	static int cnt = 5;
 
+        if (strlen(countrycode)) {
+                CHG_DBG("%s: countrycode from proc is not null: %s!\n", __func__, countrycode);
+                strcpy(buf, countrycode);
+                goto out;
+        }
+
+
 	fp = filp_open(COUNTRY_CODE_PATH, O_RDONLY, 0);
 	if (IS_ERR_OR_NULL(fp)) {
         	printk("[BAT][CHG] OPEN (%s) failed\n", COUNTRY_CODE_PATH);
@@ -3037,7 +3044,10 @@ void read_BR_countrycode_work(struct work_struct *work)
 			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(3000));
 		return;
 	}
+	set_fs(old_fs);
+	filp_close(fp, NULL);
 
+out:
 	cnt =5; //reset
 	if (strcmp(buf, "BR") == 0)
 		BR_countrycode = COUNTRY_BR;
@@ -3047,12 +3057,6 @@ void read_BR_countrycode_work(struct work_struct *work)
 		BR_countrycode = COUNTRY_OTHER;
 
 	CHG_DBG("country code : %s, type %d\n", buf, BR_countrycode);
-		
-
-	set_fs(old_fs);
-	filp_close(fp, NULL);	
-
-
 
 	return ;
 
@@ -4094,7 +4098,7 @@ static int smb2_probe(struct platform_device *pdev)
 		goto cleanup;
 
 	//WeiYu: BR country code for icl table
-	schedule_delayed_work(&chg->read_countrycode_work, msecs_to_jiffies(8000));		
+	schedule_delayed_work(&chg->read_countrycode_work, msecs_to_jiffies(30000));
 
 ////ASUS FEATURES ---
 
