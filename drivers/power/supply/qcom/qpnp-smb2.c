@@ -2364,6 +2364,61 @@ static void smb2_create_debugfs(struct smb2 *chip)
 #endif
 
 
+/* Huaqin add for read countrycode by liunianliang at 2019/01/16 start */
+static struct proc_dir_entry *countrycode_entry = NULL;
+char countrycode[32];
+
+static ssize_t
+countrycode_proc_write(struct file *filp, const char *ubuf, size_t cnt, loff_t *data) {
+	size_t copy_size = cnt;
+	if (cnt >= sizeof(countrycode))
+		copy_size = sizeof(countrycode);
+
+	if (copy_from_user(&countrycode, ubuf, copy_size)) {
+		CHG_DBG("%s: copy_from_user fail !\n", __func__);
+		return -EFAULT;
+	}
+
+	countrycode[copy_size] = 0;
+	return copy_size;
+}
+
+static int countrycode_proc_show(struct seq_file *m, void *v) {
+	seq_printf(m, "%s\n", countrycode);
+	return 0;
+}
+
+static int countrycode_proc_open(struct inode *inode, struct file *file) {
+	return single_open(file, countrycode_proc_show, inode->i_private);
+}
+
+static const struct file_operations countrycode_proc_ops = {
+	.open = countrycode_proc_open,
+	.write = countrycode_proc_write,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static int init_proc_countrycode(void) {
+	int ret =0 ;
+
+	countrycode_entry = proc_create("countrycode", 0666, NULL, &countrycode_proc_ops);
+
+	if (countrycode_entry == NULL) {
+		printk("create_proc entry %s failed!\n", "countrycode");
+		return -ENOMEM;
+	} else {
+		printk("create proc entry %s success\n", "countrycode");
+		ret = 0;
+	}
+
+	return ret;
+}
+/* Huaqin add for read countrycode by liunianliang at 2019/01/16 end */
+
+
+
 //// ASUS FUNCTIONS +++
 
 // ASUS BSP Austin_T : Add attributes +++
@@ -4042,6 +4097,10 @@ static int smb2_probe(struct platform_device *pdev)
 	schedule_delayed_work(&chg->read_countrycode_work, msecs_to_jiffies(8000));		
 
 ////ASUS FEATURES ---
+
+/* Huaqin add for read countrycode by liunianliang at 2019/01/16 start */
+	init_proc_countrycode();
+/* Huaqin add for read countrycode by liunianliang at 2019/01/16 end */
 
 	smb2_create_debugfs(chip);
 
