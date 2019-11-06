@@ -279,7 +279,7 @@
 		};
 	};
 };
-
+/* remove duplicate config here config pm660_gpio3 in arch/arm/boot/dts/qcom/msm-pm660.dtsi or ara-er-msm-pm660.dtsi
 &pm660_gpios {
 	gpio@c200 {
 		status = "ok";
@@ -291,3 +291,4 @@
 		qcom,out-strength = <2>;
 	};
 };
+*/
