@@ -615,6 +615,18 @@
 #define FP_KEY_LONG_PRESS          0x25e
 /* Huaqin add define for fingerprint nav-keycode by leiyu at 2018/04/12 end */
 
+//Huaqin add for asus gesture by xudongfang at 2018/9/5 start
+#define KEY_TP_GESTURE_SWIPE_UP 	0x2F6
+#define KEY_TP_GESTURE_DOUBLE_CLICK 	0x2F7
+#define KEY_TP_GESTURE_C 		0x2F0
+#define KEY_TP_GESTURE_E 		0x2ED
+#define KEY_TP_GESTURE_S 		0x2EE
+#define KEY_TP_GESTURE_V 		0x2F1
+#define KEY_TP_GESTURE_W 		0x2EC
+#define KEY_TP_GESTURE_Z 		0x2EF
+//Huaqin add for asus gesture by xudongfang at 2018/9/5 end
+
+
 #define KEY_KBDINPUTASSIST_PREV		0x260
 #define KEY_KBDINPUTASSIST_NEXT		0x261
 #define KEY_KBDINPUTASSIST_PREVGROUP		0x262

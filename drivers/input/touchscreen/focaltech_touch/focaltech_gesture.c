@@ -39,19 +39,19 @@
 * Private constant and macro definitions using #define
 *****************************************************************************/
 #define  KEY_GESTURE_U                          KEY_U
-#define  KEY_GESTURE_UP                         KEY_UP
+#define  KEY_GESTURE_UP                         KEY_TP_GESTURE_SWIPE_UP
 #define  KEY_GESTURE_DOWN                       KEY_DOWN
 #define  KEY_GESTURE_LEFT                       KEY_LEFT
 #define  KEY_GESTURE_RIGHT                      KEY_RIGHT
 #define  KEY_GESTURE_O                          KEY_O
-#define  KEY_GESTURE_E                          KEY_E
+#define  KEY_GESTURE_E                          KEY_TP_GESTURE_E
 #define  KEY_GESTURE_M                          KEY_M
 #define  KEY_GESTURE_L                          KEY_L
-#define  KEY_GESTURE_W                          KEY_W
-#define  KEY_GESTURE_S                          KEY_S
-#define  KEY_GESTURE_V                          KEY_V
-#define  KEY_GESTURE_C                          KEY_C
-#define  KEY_GESTURE_Z                          KEY_Z
+#define  KEY_GESTURE_W                          KEY_TP_GESTURE_W
+#define  KEY_GESTURE_S                          KEY_TP_GESTURE_S
+#define  KEY_GESTURE_V                          KEY_TP_GESTURE_V
+#define  KEY_GESTURE_C                          KEY_TP_GESTURE_C
+#define  KEY_GESTURE_Z                          KEY_TP_GESTURE_Z
 #define  KEY_GESTURE_Heart   					KEY_L
 
 #define GESTURE_LEFT                            0x20
@@ -452,6 +452,7 @@ int fts_gesture_init(struct input_dev *input_dev, struct i2c_client *client)
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_V);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_Z);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_C);
+    input_set_capability(input_dev, EV_KEY, KEY_TP_GESTURE_DOUBLE_CLICK);
 
     __set_bit(KEY_GESTURE_RIGHT, input_dev->keybit);
     __set_bit(KEY_GESTURE_LEFT, input_dev->keybit);
@@ -530,7 +531,7 @@ static void fts_check_gesture(struct input_dev *input_dev,int gesture_id)
             	break;
         	case GESTURE_DOUBLECLICK:
             	envp[0]="GESTURE=DOUBLE_CLICK";
-            	gesture = KEY_POWER;
+                  gesture = KEY_TP_GESTURE_DOUBLE_CLICK;
             	break;
         	case GESTURE_O:
            	 	envp[0]="GESTURE=O";
@@ -578,7 +579,7 @@ static void fts_check_gesture(struct input_dev *input_dev,int gesture_id)
             	break;
     	}
     	FTS_DEBUG("envp[0]: %s", envp[0]);
-    	/* report event key */
+         /* report event key to framework*/
     	if (gesture != -1)
     	{
         	input_report_key(input_dev, gesture, 1);
