@@ -216,9 +216,9 @@ static ssize_t switch_gesture_mode_store(struct device *dev, struct device_attri
 	if (fts_wq_data->gesture_mode_eable == 1) {
 
 		for (tmp = 0; tmp < 7; tmp++) {
-			if (gesture_buf[tmp] == cmpchar) {
+			//if (gesture_buf[tmp] == cmpchar) {
 				gesturetmp |= (1 << tmp);
-			}
+			//}
 		}
 
 		fts_wq_data->gesture_mode_type = gesturetmp;
