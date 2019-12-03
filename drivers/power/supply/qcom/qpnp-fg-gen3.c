@@ -2986,7 +2986,7 @@ static void status_change_work(struct work_struct *work)
 	}
 
 	chip->charge_done = prop.intval;
-	fg_cycle_counter_update(chip);
+	fg_cycle_counter_update(chip);  // bucket_count parse: soc percent is divided to bucket_count, such as bucket_count = 8, so bucket[0]-[7]: 0-12.5  12.5-25.... 87.5-100;   every pick = [100/bucket_count]
 	fg_cap_learning_update(chip);
 
 	rc = fg_charge_full_update(chip);
@@ -7821,7 +7821,7 @@ backup_asus_capacity_work	backup delta_soc
 void probe_init_asus_works(void)
 {
 
-	INIT_DELAYED_WORK(&update_gauge_status_work, update_gauge_status_worker);
+	INIT_DELAYED_WORK(&update_gauge_status_work, update_gauge_status_worker); // workqueue for print fuel gauge status  in every 3min
 	INIT_DELAYED_WORK(&fix_maint_soc_work, fix_maint_soc_worker);
 	INIT_DELAYED_WORK(&regular_check_soc_work, regular_check_soc_worker);
 
