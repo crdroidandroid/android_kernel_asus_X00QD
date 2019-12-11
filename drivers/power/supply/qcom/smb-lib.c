@@ -4571,7 +4571,7 @@ void jeita_rule(void)
 	case JEITA_STATE_LESS_THAN_0:
 		charging_enable = EN_BAT_CHG_EN_COMMAND_FALSE;
 		FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
-		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_850MA;
+		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_0MA;
 		CHG_DBG("%s: temperature < 0\n", __func__);
 		break;
 	case JEITA_STATE_RANGE_0_to_100:
@@ -5318,7 +5318,6 @@ static void CHG_TYPE_judge(struct smb_charger *chg)
 
 	// read charger ID via pm660 gpio3
 	adc_result = get_ID_vadc_voltage();
-
 	if (adc_result <= VADC_THD_300MV) {
 		ret = gpio_direction_output(global_gpio->ADCPWREN_PMI_GP1, 1);
 		if (ret) {
@@ -5329,7 +5328,6 @@ static void CHG_TYPE_judge(struct smb_charger *chg)
 		msleep(5);
 
 		adc_result = get_ID_vadc_voltage();
-
 		if (adc_result >= VADC_THD_1000MV) {
 			ASUS_ADAPTER_ID = OTHERS;
 		} else {
@@ -5650,7 +5648,7 @@ void asus_adapter_adc_work(struct work_struct *work)
 	}
 
 
-	CHG_DBG_EVT("%s: ASUS_ADAPTER_ID = %s, setting mA = 0x%x\n", __func__, asus_id[ASUS_ADAPTER_ID], usb_max_current);
+	CHG_DBG_EVT("%s: HVDCP_FLAG:%d, asus_CHG_TYPE:%d, ASUS_ADAPTER_ID = %s, setting mA = 0x%x\n", __func__, HVDCP_FLAG, asus_CHG_TYPE, asus_id[ASUS_ADAPTER_ID], usb_max_current);
 
 
 	rc = smblib_masked_write(smbchg_dev, USBIN_CURRENT_LIMIT_CFG_REG,
