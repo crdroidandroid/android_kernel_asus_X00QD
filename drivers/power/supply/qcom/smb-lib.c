@@ -4606,8 +4606,13 @@ void jeita_rule(void)
 			FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
 			FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_3000MA;
 		} else {
-			FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
-			FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_1500MA;
+			/* fix issue FCC change between 1.5A and 3A in low soc conditions
+			 * because the battery voltage is abnormal changes in threshold 4.2V
+			 * so add additional conditions judge to set FCC 1.5A only when soc>40% & battery voltage>4.2V */
+			if (bat_capacity >= 40) {
+				FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
+				FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_1500MA;
+			}
 		}
 		CHG_DBG("%s: 20 <= temperature < 50\n", __func__);
 		rc = SW_recharge(smbchg_dev);
