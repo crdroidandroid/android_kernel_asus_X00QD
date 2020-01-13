@@ -413,9 +413,7 @@ static int xen_vbd_create(struct xen_blkif *blkif, blkif_vdev_t handle,
 		vbd->type |= VDISK_REMOVABLE;
 
 	q = bdev_get_queue(bdev);
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 start */
-	if (q && test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 end */
+	if (q && q->flush_flags)
 		vbd->flush_support = true;
 
 	if (q && blk_queue_secdiscard(q))

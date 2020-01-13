@@ -1969,10 +1969,7 @@ generic_make_request_checks(struct bio *bio)
 	 * drivers without flush support don't have to worry
 	 * about them.
 	 */
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 start */
-	if ((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) &&
-	    !test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 end */
+	if ((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) && !q->flush_flags) {
 		bio->bi_rw &= ~(REQ_FLUSH | REQ_FUA);
 		if (!nr_sectors) {
 			err = 0;

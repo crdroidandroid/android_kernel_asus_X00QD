@@ -137,17 +137,15 @@ static const char *sd_cache_types[] = {
 
 static void sd_set_flush_flag(struct scsi_disk *sdkp)
 {
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 start */
-	bool wc = false, fua = false;
+	unsigned flush = 0;
 
 	if (sdkp->WCE) {
-		wc = true;
+		flush |= REQ_FLUSH;
 		if (sdkp->DPOFUA)
-			fua = true;
+			flush |= REQ_FUA;
 	}
 
-	blk_queue_write_cache(sdkp->disk->queue, wc, fua);
-/* Huaqin modify for ZQL1830-1816 by lanshiming at 2018/11/26 end */
+	blk_queue_flush(sdkp->disk->queue, flush);
 }
 
 static ssize_t
