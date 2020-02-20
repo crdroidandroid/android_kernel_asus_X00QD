@@ -4565,7 +4565,7 @@ int batt_health_csc_backup(void){
 		(char*)&buf, sizeof(struct BAT_HEALTH_DATA)*BAT_HEALTH_NUMBER_MAX, FILE_OP_READ);
 	if(rc < 0) {
 		BAT_DBG_E("Read bat health file failed!\n");
-		return rc;
+		//return rc;
 	}
 
 	for(i=1;i<BAT_HEALTH_NUMBER_MAX;i++){
