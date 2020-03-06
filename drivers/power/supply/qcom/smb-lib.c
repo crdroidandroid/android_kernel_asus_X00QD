@@ -28,6 +28,7 @@
 
 //ASUS INCLUDE FILES +++
 #include "../../../usb/pd/usbpd.h"
+#include <linux/switch.h>
 #include "fg-core.h"
 #include <linux/gpio.h>
 #include <linux/alarmtimer.h>
@@ -286,6 +287,8 @@ int asus_get_prop_batt_health(struct smb_charger *chg);
 int asus_get_prop_usb_present(struct smb_charger *chg);
 int asus_get_batt_status(struct smb_charger *chg);
 // ASUS GET PROP FUNCTION ---
+
+extern struct switch_dev usb_otg_dev;
 
 
 extern const char *batt_status_text[];
@@ -1943,6 +1946,8 @@ static int _smblib_vbus_regulator_enable(struct regulator_dev *rdev)
 		if (rc < 0)
 			smblib_err(chg, "Couldn't enable OTG rc=%d\n", rc);
 	}
+	switch_set_state(&usb_otg_dev,1);
+
 
 	return rc;
 }
@@ -1999,6 +2004,7 @@ static int _smblib_vbus_regulator_disable(struct regulator_dev *rdev)
 	}
 
 	smblib_dbg(chg, PR_OTG, "start 1 in 8 mode\n");
+	switch_set_state(&usb_otg_dev,0);
 	rc = smblib_masked_write(chg, OTG_ENG_OTG_CFG_REG,
 				 ENG_BUCKBOOST_HALT1_8_MODE_BIT, 0);
 	if (rc < 0) {

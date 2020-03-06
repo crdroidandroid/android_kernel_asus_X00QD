@@ -3454,6 +3454,24 @@ void register_usb_alert(void)
 }
 /*---BSP Austin_T Add USB ALERT function---*/
 
+//for usb_otg state begin
+struct switch_dev usb_otg_dev;
+void register_usb_otg(void)
+{
+    int ret;
+    usb_otg_dev.name = "usb_otg";
+    usb_otg_dev.index = 0;
+    ret = switch_dev_register(&usb_otg_dev);
+    if(ret<0)
+        pr_err("%s debug_0305 << Failed to register switch usb_otg uevent\n", __func__);
+    else
+        pr_err("%s debug_0305 << Success to register switch usb_otg uevent\n", __func__);
+
+
+}
+//for usb_otg state begin
+
+
 /*+++BSP Austin_T Add LOW IMPEDANCE function+++*/
 struct switch_dev low_impedance_dev;
 void asus_low_impedance_work(struct work_struct *work)
@@ -3958,7 +3976,6 @@ static int smb2_probe(struct platform_device *pdev)
 		pr_err("parent regmap is missing\n");
 		return -EINVAL;
 	}
-
 	rc = smb2_chg_config_init(chip);
 	if (rc < 0) {
 		if (rc != -EPROBE_DEFER)
@@ -4135,6 +4152,9 @@ static int smb2_probe(struct platform_device *pdev)
 		goto cleanup;
 	}
 	batt_charge_type = val.intval;
+    //for usb_otg stasysfs_remove_grouprt start
+    register_usb_otg();
+    //for usb_otg stasysfs_remove_grouprt end
 
 	device_init_wakeup(chg->dev, true);
 
