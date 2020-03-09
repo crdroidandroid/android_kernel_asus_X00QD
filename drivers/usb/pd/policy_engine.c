@@ -470,7 +470,6 @@ static const unsigned int usbpd_extcon_cable[] = {
 	EXTCON_USB_HOST,
 	EXTCON_USB_CC,
 	EXTCON_USB_SPEED,
-	EXTCON_USB_TYPEC_MED_HIGH_CURRENT,
 	EXTCON_NONE,
 };
 
@@ -518,8 +517,6 @@ static inline void start_usb_peripheral(struct usbpd *pd)
 	extcon_set_cable_state_(pd->extcon, EXTCON_USB_CC,
 			cc == ORIENTATION_CC2);
 	extcon_set_cable_state_(pd->extcon, EXTCON_USB_SPEED, 1);
-	extcon_set_cable_state_(pd->extcon, EXTCON_USB_TYPEC_MED_HIGH_CURRENT,
-		pd->typec_mode > POWER_SUPPLY_TYPEC_SOURCE_DEFAULT ? 1 : 0);
 	extcon_set_cable_state_(pd->extcon, EXTCON_USB, 1);
 }
 
@@ -1125,8 +1122,8 @@ static void usbpd_set_state(struct usbpd *pd, enum usbpd_state next_state)
 	if (pd->hard_reset_recvd) /* let usbpd_sm handle it */
 		return;
 
-	usbpd_dbg(&pd->dev, "%s -> %s\n",
-			usbpd_state_strings[pd->current_state],
+	usbpd_dbg(&pd->dev, "%s %d: %s -> %s\n",
+			__func__, __LINE__, usbpd_state_strings[pd->current_state],
 			usbpd_state_strings[next_state]);
 
 	pd->current_state = next_state;
@@ -1220,6 +1217,8 @@ static void usbpd_set_state(struct usbpd *pd, enum usbpd_state next_state)
 	case PE_SRC_NEGOTIATE_CAPABILITY:
 		if (PD_RDO_OBJ_POS(pd->rdo) != 1 ||
 			PD_RDO_FIXED_CURR(pd->rdo) >
+				PD_SRC_PDO_FIXED_MAX_CURR(*default_src_caps) ||
+			PD_RDO_FIXED_CURR_MINMAX(pd->rdo) >
 				PD_SRC_PDO_FIXED_MAX_CURR(*default_src_caps)) {
 			/* send Reject */
 			ret = pd_send_msg(pd, MSG_REJECT, NULL, 0, SOP_MSG);
@@ -1390,6 +1389,7 @@ static void usbpd_set_state(struct usbpd *pd, enum usbpd_state next_state)
 		pd->pd_connected = true; /* we know peer is PD capable */
 		pd->hard_reset_count = 0;
 
+		printk("%s %d PE_SNK_EVALUATE_CAPABILITY!\n", __func__, __LINE__);
 		/* evaluate PDOs and select one */
 #ifdef CONFIG_ASUS_PD_CHARGER
 		ret = pd_eval_src_caps_asus(pd);
