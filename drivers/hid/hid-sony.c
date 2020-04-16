@@ -53,8 +53,6 @@
 #define MOTION_CONTROLLER_BT      BIT(9)
 #define NAVIGATION_CONTROLLER_USB BIT(10)
 #define NAVIGATION_CONTROLLER_BT  BIT(11)
-#define SINO_LITE_CONTROLLER      BIT(12)
-#define FUTUREMAX_DANCE_MAT       BIT(13)
 
 #define to_hid_device(pdev) container_of(pdev, struct hid_device, dev)
 
@@ -580,10 +578,14 @@ static void sony_set_leds(struct sony_sc *sc);
 static inline void sony_schedule_work(struct sony_sc *sc,
 				      enum sony_worker which)
 {
+	unsigned long flags;
+
 	switch (which) {
 	case SONY_WORKER_STATE:
-		if (!sc->defer_initialization)
+		spin_lock_irqsave(&sc->lock, flags);
+		if (!sc->defer_initialization && sc->state_worker_initialized)
 			schedule_work(&sc->state_worker);
+		spin_unlock_irqrestore(&sc->lock, flags);
 		break;
 	case SONY_WORKER_HOTPLUG:
 		if (sc->hotplug_worker_initialized)
@@ -606,7 +608,7 @@ static ssize_t ds4_store_poll_interval(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count)
 {
-	struct hid_device *hdev = to_hid_device(dev);
+	struct hid_device *hdev = container_of(dev, struct hid_device, dev);
 	struct sony_sc *sc = hid_get_drvdata(hdev);
 	unsigned long flags;
 	u8 interval;
@@ -1189,6 +1191,11 @@ static int sony_raw_event(struct hid_device *hdev, struct hid_report *report,
 		sony_schedule_work(sc, SONY_WORKER_STATE);
 	}
 
+	if (sc->defer_initialization) {
+		sc->defer_initialization = 0;
+		sony_schedule_work(sc, SONY_WORKER_STATE);
+	}
+
 	return 0;
 }
 
@@ -1382,6 +1389,12 @@ static int sony_register_sensors(struct sony_sc *sc)
 	if (ret < 0)
 		goto err;
 
+	__set_bit(INPUT_PROP_ACCELEROMETER, sc->sensor_dev->propbit);
+
+	ret = input_register_device(sc->sensor_dev);
+	if (ret < 0)
+		goto err;
+
 	return 0;
 
 err:
@@ -1455,8 +1468,6 @@ out:
 
 static int sixaxis_set_operational_bt(struct hid_device *hdev)
 {
-	static const u8 report[] = { 0xf4, 0x42, 0x03, 0x00, 0x00 };
-	u8 *buf;
 	int ret;
 
 	buf = kmemdup(report, sizeof(report), GFP_KERNEL);
@@ -1477,7 +1488,6 @@ static int sixaxis_set_operational_bt(struct hid_device *hdev)
  */
 static int dualshock4_get_calibration_data(struct sony_sc *sc)
 {
-	u8 *buf;
 	int ret;
 	short gyro_pitch_bias, gyro_pitch_plus, gyro_pitch_minus;
 	short gyro_yaw_bias, gyro_yaw_plus, gyro_yaw_minus;
@@ -1614,6 +1624,7 @@ err_stop:
 	kfree(buf);
 	return ret;
 }
+
 
 static void dualshock4_calibration_work(struct work_struct *work)
 {
@@ -2161,9 +2172,15 @@ static int sony_play_effect(struct input_dev *dev, void *data,
 
 static int sony_init_ff(struct sony_sc *sc)
 {
-	struct hid_input *hidinput = list_entry(sc->hdev->inputs.next,
-						struct hid_input, list);
-	struct input_dev *input_dev = hidinput->input;
+	struct hid_input *hidinput;
+	struct input_dev *input_dev;
+
+	if (list_empty(&sc->hdev->inputs)) {
+		hid_err(sc->hdev, "no inputs found\n");
+		return -ENODEV;
+	}
+	hidinput = list_entry(sc->hdev->inputs.next, struct hid_input, list);
+	input_dev = hidinput->input;
 
 	input_set_capability(input_dev, EV_FF, FF_RUMBLE);
 	return input_ff_create_memless(input_dev, NULL, sony_play_effect);
@@ -2490,12 +2507,17 @@ static inline void sony_init_output_report(struct sony_sc *sc,
 
 static inline void sony_cancel_work_sync(struct sony_sc *sc)
 {
+	unsigned long flags;
+
 	if (sc->hotplug_worker_initialized)
 		cancel_work_sync(&sc->hotplug_worker);
-	if (sc->state_worker_initialized)
+	if (sc->state_worker_initialized) {
+		spin_lock_irqsave(&sc->lock, flags);
+		sc->state_worker_initialized = 0;
+		spin_unlock_irqrestore(&sc->lock, flags);
 		cancel_work_sync(&sc->state_worker);
+	}
 }
-
 
 static int sony_input_configured(struct hid_device *hdev,
 					struct hid_input *hidinput)
@@ -2703,7 +2725,68 @@ err_stop:
 	kfree(sc->output_report_dmabuf);
 	sony_remove_dev_list(sc);
 	sony_release_device_id(sc);
-	hid_hw_stop(hdev);
+	return ret;
+}
+
+static int sony_probe(struct hid_device *hdev, const struct hid_device_id *id)
+{
+	int ret;
+	unsigned long quirks = id->driver_data;
+	struct sony_sc *sc;
+	unsigned int connect_mask = HID_CONNECT_DEFAULT;
+
+	sc = devm_kzalloc(&hdev->dev, sizeof(*sc), GFP_KERNEL);
+	if (sc == NULL) {
+		hid_err(hdev, "can't alloc sony descriptor\n");
+		return -ENOMEM;
+	}
+
+	spin_lock_init(&sc->lock);
+
+	sc->quirks = quirks;
+	hid_set_drvdata(hdev, sc);
+	sc->hdev = hdev;
+
+	ret = hid_parse(hdev);
+	if (ret) {
+		hid_err(hdev, "parse failed\n");
+		return ret;
+	}
+
+	if (sc->quirks & VAIO_RDESC_CONSTANT)
+		connect_mask |= HID_CONNECT_HIDDEV_FORCE;
+	else if (sc->quirks & SIXAXIS_CONTROLLER)
+		connect_mask |= HID_CONNECT_HIDDEV_FORCE;
+
+	/* Patch the hw version on DS3/4 compatible devices, so applications can
+	 * distinguish between the default HID mappings and the mappings defined
+	 * by the Linux game controller spec. This is important for the SDL2
+	 * library, which has a game controller database, which uses device ids
+	 * in combination with version as a key.
+	 */
+	if (sc->quirks & (SIXAXIS_CONTROLLER | DUALSHOCK4_CONTROLLER))
+		hdev->version |= 0x8000;
+
+	ret = hid_hw_start(hdev, connect_mask);
+	if (ret) {
+		hid_err(hdev, "hw start failed\n");
+		return ret;
+	}
+
+	/* sony_input_configured can fail, but this doesn't result
+	 * in hid_hw_start failures (intended). Check whether
+	 * the HID layer claimed the device else fail.
+	 * We don't know the actual reason for the failure, most
+	 * likely it is due to EEXIST in case of double connection
+	 * of USB and Bluetooth, but could have been due to ENOMEM
+	 * or other reasons as well.
+	 */
+	if (!(hdev->claimed & HID_CLAIMED_INPUT)) {
+		hid_err(hdev, "failed to claim input\n");
+		hid_hw_stop(hdev);
+		return -ENODEV;
+	}
+
 	return ret;
 }
 
@@ -2885,9 +2968,6 @@ static const struct hid_device_id sony_devices[] = {
 		.driver_data = DUALSHOCK4_CONTROLLER_BT },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_SONY, USB_DEVICE_ID_SONY_PS4_CONTROLLER_DONGLE),
 		.driver_data = DUALSHOCK4_DONGLE },
-	/* Nyko Core Controller for PS3 */
-	{ HID_USB_DEVICE(USB_VENDOR_ID_SINO_LITE, USB_DEVICE_ID_SINO_LITE_CONTROLLER),
-		.driver_data = SIXAXIS_CONTROLLER_USB | SINO_LITE_CONTROLLER },
 	{ }
 };
 MODULE_DEVICE_TABLE(hid, sony_devices);
