@@ -216,9 +216,9 @@ static ssize_t switch_gesture_mode_store(struct device *dev, struct device_attri
 	if (fts_wq_data->gesture_mode_eable == 1) {
 
 		for (tmp = 0; tmp < 7; tmp++) {
-			//if (gesture_buf[tmp] == cmpchar) {
+			if (gesture_buf[tmp] == cmpchar) {
 				gesturetmp |= (1 << tmp);
-			//}
+			}
 		}
 
 		fts_wq_data->gesture_mode_type = gesturetmp;
@@ -275,14 +275,7 @@ static ssize_t switch_gesture_mode_store(struct device *dev, struct device_attri
 }
 static ssize_t switch_gesture_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	bool tmp = 0;
-
-	tmp = (fts_wq_data->gesture_mode_type >> 6) & 1;
-
-	if (!tmp)
-		return sprintf(buf, "%x \n", tmp);
-	else
-		return sprintf(buf, "%x \n", fts_wq_data->gesture_mode_type);
+	return sprintf(buf, "%d\n", fts_wq_data->gesture_mode_type);
 
 }
 
@@ -437,7 +430,7 @@ void fts_gesture_recovery(struct i2c_client *client)
 int fts_gesture_init(struct input_dev *input_dev, struct i2c_client *client)
 {
     FTS_FUNC_ENTER();
-    input_set_capability(input_dev, EV_KEY, KEY_POWER);
+    input_set_capability(input_dev, EV_KEY, KEY_WAKEUP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_U);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_UP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_DOWN);
@@ -455,6 +448,7 @@ int fts_gesture_init(struct input_dev *input_dev, struct i2c_client *client)
     input_set_capability(input_dev, EV_KEY, KEY_TP_GESTURE_DOUBLE_CLICK);
 
     __set_bit(KEY_GESTURE_RIGHT, input_dev->keybit);
+	__set_bit(KEY_WAKEUP, input_dev->keybit);
     __set_bit(KEY_GESTURE_LEFT, input_dev->keybit);
     __set_bit(KEY_GESTURE_UP, input_dev->keybit);
     __set_bit(KEY_GESTURE_DOWN, input_dev->keybit);
@@ -531,7 +525,7 @@ static void fts_check_gesture(struct input_dev *input_dev,int gesture_id)
             	break;
         	case GESTURE_DOUBLECLICK:
             	envp[0]="GESTURE=DOUBLE_CLICK";
-                  gesture = KEY_TP_GESTURE_DOUBLE_CLICK;
+                  gesture = KEY_WAKEUP;
             	break;
         	case GESTURE_O:
            	 	envp[0]="GESTURE=O";
@@ -571,7 +565,7 @@ static void fts_check_gesture(struct input_dev *input_dev,int gesture_id)
             	break;
 			case  GESTURE_Heart:
             	envp[0]="GESTURE=DOUBLE_CLICK";
-            	gesture = KEY_POWER;
+            	gesture = KEY_WAKEUP;
             	break;
         	default:
             	envp[0]="GESTURE=NONE";
