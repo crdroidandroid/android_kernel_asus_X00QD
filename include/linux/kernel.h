@@ -49,10 +49,6 @@ enum DEVICE_PRJID
 extern enum DEVICE_HWID g_ASUS_prjID;
 // --- ASUS_BSP : add for miniporting
 
-// ASUS_BSP +++ get permissive status
-extern int permissive_enable;
-// ASUS_BSP --- get permissive status
-
 /* ASUS_BSP Audio +++ */
 #define ASUS_AUDIO_MODE_PORTING_COMPLETED 1
 /* ASUS_BSP Audio --- */
