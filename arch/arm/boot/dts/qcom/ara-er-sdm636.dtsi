@@ -25,6 +25,12 @@
 			no-map;
 			reg = <0x0 0x94a00000 0x0 0x100000>;
 		};
+
+		ramoops_mem: ramoops_region@94b00000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0x0 0x94b00000 0x0 0x400000>;
+		};
 	};
 };
 
@@ -54,6 +60,13 @@
 				< 1747200 2929 >,
 				< 1804800 5163 >;
 		};
+	};
+
+	ramoops {
+		compatible = "ramoops";
+		memory-region = <&ramoops_mem>;
+		console-size = <0x0 0x200000>;
+		pmsg-size = <0x0 0x200000>;
 	};
 };
 
