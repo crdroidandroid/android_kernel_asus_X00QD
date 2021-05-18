@@ -232,8 +232,8 @@ int fake_temp = FAKE_TEMP_INIT;
 #define CYCLE_COUNT_FILE_NAME   "/dev/block/platform/soc/c0c4000.sdhci/by-name/asuskey3"
 #define BAT_PERCENT_FILE_NAME   "/asdf/Batpercentage"
 #define BAT_SAFETY_FILE_NAME   "/asdf/bat_safety"
-#define CYCLE_COUNT_SD_FILE_NAME   "/sdcard/.bs"
-#define BAT_PERCENT_SD_FILE_NAME   "/sdcard/Batpercentage"
+#define CYCLE_COUNT_SD_FILE_NAME   "/APD/.bs"
+#define BAT_PERCENT_SD_FILE_NAME   "/APD/Batpercentage"
 #define BAT_CYCLE_SD_FILE_NAME   "/asdf/Batcyclecount"
 #define CYCLE_COUNT_DATA_OFFSET  0x0
 #define FILE_OP_READ   0
@@ -262,7 +262,7 @@ struct delayed_work battery_safety_work;
 #define BAT_HEALTH_DATA_BACKUP_MAGIC 0x87
 #define ZE620KL_DESIGNED_CAPACITY 3150 //mAh
 #define BAT_HEALTH_DATA_FILE_NAME   "/asdf/bat_health_binary"
-#define BAT_HEALTH_DATA_SD_FILE_NAME   "/sdcard/.bh"
+#define BAT_HEALTH_DATA_SD_FILE_NAME   "/APD/.bh"
 #define BAT_HEALTH_START_LEVEL 70
 #define BAT_HEALTH_END_LEVEL 100
 static bool g_bathealth_initialized = false;
