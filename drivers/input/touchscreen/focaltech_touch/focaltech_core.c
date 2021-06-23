@@ -732,8 +732,8 @@ static int fts_input_dev_report_b(struct ts_event *event, struct fts_ts_data *da
             data->touchs |= BIT(event->au8_finger_id[i]);
 		/* +++ asus add for print touch location +++ */
 			if ((report_touch_locatoin_count[i] % 200) == 0) {
-				printk("[Focal][Touch] report id=%d x=%d y=%d\n", event->au8_finger_id[i],
-				event->au16_x[i], event->au16_y[i]);
+//				printk("[Focal][Touch] report id=%d x=%d y=%d\n", event->au8_finger_id[i],
+//				event->au16_x[i], event->au16_y[i]);
 				report_touch_locatoin_count[i] = 1;
 			}
 		report_touch_locatoin_count[i] += 1;
@@ -781,7 +781,7 @@ static int fts_input_dev_report_b(struct ts_event *event, struct fts_ts_data *da
     {
         FTS_DEBUG("Points All Up!");
 		if (touch_down_up_status == 1) {
-			printk("[Focal][Touch] touch up !\n");
+//			printk("[Focal][Touch] touch up !\n");
 			touch_down_up_status = 0;
 		}
 		/* +++ asus jacob add for print touch location +++ */
@@ -793,9 +793,9 @@ static int fts_input_dev_report_b(struct ts_event *event, struct fts_ts_data *da
     {
     	if (touch_down_up_status == 0) {
 			touch_down_up_status = 1;
-			printk("[Focal][Touch] touch down !\n");
-			printk("[Focal][Touch] id=%d x=%d y=%d\n", event->au8_finger_id[0],
-			event->au16_x[0], event->au16_y[0]);
+//			printk("[Focal][Touch] touch down !\n");
+//			printk("[Focal][Touch] id=%d x=%d y=%d\n", event->au8_finger_id[0],
+//			event->au16_x[0], event->au16_y[0]);
 		}
         input_report_key(data->input_dev, BTN_TOUCH, event->touch_point > 0);
     }
@@ -843,7 +843,7 @@ static int fts_input_dev_report_a(struct ts_event *event,struct fts_ts_data *dat
             input_report_abs(data->input_dev, ABS_MT_POSITION_Y, event->au16_y[i]);
 			/* +++ asus add for print touch location +++ */
 			if ((report_touch_locatoin_count[i] % 200) == 0) {
-				printk("[Focal][Touch] report id=%d x=%d y=%d\n", event->au8_finger_id[i],
+//				printk("[Focal][Touch] report id=%d x=%d y=%d\n", event->au8_finger_id[i],
 				event->au16_x[i], event->au16_y[i]);
 				report_touch_locatoin_count[i] = 1;
 			}
@@ -873,7 +873,7 @@ static int fts_input_dev_report_a(struct ts_event *event,struct fts_ts_data *dat
        // FTS_DEBUG("Points All Up!");
        if (touch_down_up_status == 1) {
        		touch_down_up_status = 0;
-	   		printk("[Focal][Touch] touch up !\n");
+//	   		printk("[Focal][Touch] touch up !\n");
        	}
 		/* +++ asus jacob add for print touch location +++ */
 		memset(report_touch_locatoin_count, 0, sizeof(report_touch_locatoin_count));
@@ -886,8 +886,8 @@ static int fts_input_dev_report_a(struct ts_event *event,struct fts_ts_data *dat
         input_report_key(data->input_dev, BTN_TOUCH, event->touch_point > 0);
 		if (touch_down_up_status == 0) {
 			touch_down_up_status = 1;
-			printk("[Focal][Touch] touch down !\n");
-			printk("[Focal][Touch] id=%d x=%d y=%d\n", event->au8_finger_id[0],
+//			printk("[Focal][Touch] touch down !\n");
+//			printk("[Focal][Touch] id=%d x=%d y=%d\n", event->au8_finger_id[0],
 			event->au16_x[0], event->au16_y[0]);
 		}
     }
