@@ -655,7 +655,7 @@ LD		:= $(LDLLD)
 endif
 
 ifdef CONFIG_LTO
-LTO_CFLAGS    := -flto -flto=jobserver -fno-fat-lto-objects \
+LTO_CFLAGS    := -flto -flto=jobserver -fipa-pta -fno-fat-lto-objects \
                  -fuse-linker-plugin -fwhole-program
 KBUILD_CFLAGS += $(LTO_CFLAGS) --param=max-inline-insns-auto=1000 \
 		 --param=inline-min-speedup=15 \
