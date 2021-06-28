@@ -450,19 +450,19 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 
 	case GF_IOC_ENABLE_SPI_CLK:
-		printk("%s GF_IOC_ENABLE_SPI_CLK\n", __func__);
+//		printk("%s GF_IOC_ENABLE_SPI_CLK\n", __func__);
 #ifdef AP_CONTROL_CLK
 		gfspi_ioctl_clk_enable(gf_dev);
 #else
-		printk("Doesn't support control clock.\n");
+//		printk("Doesn't support control clock.\n");
 #endif
 		break;
 	case GF_IOC_DISABLE_SPI_CLK:
-		printk("%s GF_IOC_DISABLE_SPI_CLK\n", __func__);
+//		printk("%s GF_IOC_DISABLE_SPI_CLK\n", __func__);
 #ifdef AP_CONTROL_CLK
 		gfspi_ioctl_clk_disable(gf_dev);
 #else
-		printk("Doesn't support control clock\n");
+//		printk("Doesn't support control clock\n");
 #endif
 		break;
 	case GF_IOC_ENABLE_POWER:
