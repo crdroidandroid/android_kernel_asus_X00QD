@@ -1915,7 +1915,7 @@ static int fastrpc_init_process(struct fastrpc_file *fl,
 		VERIFY(err, !init->mem);
 		if (err) {
 			err = -EINVAL;
-			pr_err("adsprpc: %s: %s: ERROR: donated memory allocated in userspace\n",
+			pr_err("adsprpc: %s: %s: ERROR: donated memory allocated in userspace \n",
 				current->comm, __func__);
 			goto bail;
 		}
