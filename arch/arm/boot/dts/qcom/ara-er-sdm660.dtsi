@@ -1495,6 +1495,16 @@
 			< 2457600 >;
 	};
 
+	devfreq_compute: qcom,devfreq-compute {
+		compatible = "qcom,arm-cpu-mon";
+		qcom,cpulist = <&CPU0 &CPU1 &CPU2 &CPU3>;
+		qcom,target-dev = <&mincpubw>;
+		qcom,core-dev-table =
+                        < 902400 762 >,
+                        < 1401600 2086 >,
+                        < 1881600 3879 >;
+	};
+
 	sdhc_1: sdhci@c0c4000 {
 		compatible = "qcom,sdhci-msm-v5";
 		reg = <0xc0c4000 0x1000>, <0xc0c5000 0x1000>;
