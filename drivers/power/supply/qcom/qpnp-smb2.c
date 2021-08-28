@@ -76,8 +76,7 @@ bool boot_completed_flag = 0;			// 1 for boot complete, refer to sys.boot_comple
 extern bool asus_flow_done_flag;
 extern bool g_Charger_mode;			//from init/main.c
 extern int asus_CHG_TYPE;
-int qc_stat_registed = 0;				
-int BR_countrycode =0;				// setting special icl for certain area
+int qc_stat_registed = 0;
 bool demo_app_property_flag = 0;		// indicate it is demo phone, limit capacity for good battery life.
 bool smartchg_stop_flag = 0;			// for AP to make AC becoming non-charging
 bool no_input_suspend_flag = 0;		// for thermal test, make AC wont suspend(discharging)
@@ -2363,62 +2362,6 @@ static void smb2_create_debugfs(struct smb2 *chip)
 
 #endif
 
-
-/* Huaqin add for read countrycode by liunianliang at 2019/01/16 start */
-static struct proc_dir_entry *countrycode_entry = NULL;
-char countrycode[32];
-
-static ssize_t
-countrycode_proc_write(struct file *filp, const char *ubuf, size_t cnt, loff_t *data) {
-	size_t copy_size = cnt;
-	if (cnt >= sizeof(countrycode))
-		copy_size = sizeof(countrycode);
-
-	if (copy_from_user(&countrycode, ubuf, copy_size)) {
-		CHG_DBG("%s: copy_from_user fail !\n", __func__);
-		return -EFAULT;
-	}
-
-	countrycode[copy_size] = 0;
-	return copy_size;
-}
-
-static int countrycode_proc_show(struct seq_file *m, void *v) {
-	seq_printf(m, "%s\n", countrycode);
-	return 0;
-}
-
-static int countrycode_proc_open(struct inode *inode, struct file *file) {
-	return single_open(file, countrycode_proc_show, inode->i_private);
-}
-
-static const struct file_operations countrycode_proc_ops = {
-	.open = countrycode_proc_open,
-	.write = countrycode_proc_write,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-};
-
-static int init_proc_countrycode(void) {
-	int ret =0 ;
-
-	countrycode_entry = proc_create("countrycode", 0666, NULL, &countrycode_proc_ops);
-
-	if (countrycode_entry == NULL) {
-		printk("create_proc entry %s failed!\n", "countrycode");
-		return -ENOMEM;
-	} else {
-		printk("create proc entry %s success\n", "countrycode");
-		ret = 0;
-	}
-
-	return ret;
-}
-/* Huaqin add for read countrycode by liunianliang at 2019/01/16 end */
-
-
-
 //// ASUS FUNCTIONS +++
 
 // ASUS BSP Austin_T : Add attributes +++
@@ -2931,139 +2874,6 @@ void pinctrl_set_alert(struct platform_device *pdev, int setting)
 	if(ret < 0)
 		CHG_DBG("%s: pinctrl_select_state ERROR(%d).\n", __FUNCTION__, ret);
 }
-
-
-#define COUNTRY_CODE_PATH "/factory/COUNTRY"
-
-// WeiYu: BR country code +++
-/*
-static mm_segment_t oldfs;
-static void initKernelEnv(void)
-{
-    oldfs = get_fs();
-    set_fs(KERNEL_DS);
-}
-
-static void deinitKernelEnv(void)
-{
-    set_fs(oldfs);
-}
-*/
-
-/*
-// init/deinit KernelEnv seems cause watch dog, use other method.
-
-void read_BR_countrycode_work(struct work_struct *work)
-{
-    char buf[32];
-    int readlen = 0;
-	static int cnt=3;
-	struct file *fd;
-
-	initKernelEnv();
-
-	fd = filp_open(COUNTRY_CODE_PATH, O_RDONLY, 0644);
-	if (IS_ERR_OR_NULL(fd)) {
-        	printk("[BAT][CHG] OPEN (%s) failed\n", COUNTRY_CODE_PATH);
-		deinitKernelEnv();			
-		if(--cnt >= 0)
-			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(2000));		//ASUS BSP Austin_T: adapter detect start
-
-		return;
-    }
-
-	readlen = fd->f_op->read(fd, buf, strlen(buf), &fd->f_pos);
-	if (readlen < 0) {
-		printk("[BAT][CHG] Read (%s) error\n", COUNTRY_CODE_PATH);
-		deinitKernelEnv();
-		filp_close(fd, NULL);
-		kfree(buf);
-		if(--cnt >= 0)
-			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(2000));		//ASUS BSP Austin_T: adapter detect start
-		
-		return;
-	}
-	buf[readlen] = '\0';
-	if (strcmp(buf, "BR") == 0)
-		BR_countrycode = COUNTRY_BR;
-	else
-		BR_countrycode = COUNTRY_OTHER;
-
-	CHG_DBG("country code : %s, type %d\n", buf, BR_countrycode);
-		
-    filp_close(fd,NULL);
-}
-
-*/
-
-void read_BR_countrycode_work(struct work_struct *work)
-{
-
-	struct file *fp = NULL;
-	mm_segment_t old_fs;
-	loff_t pos_lsts = 0;
-	char buf[32];
-    	int readlen = 0;
-	static int cnt = 5;
-
-        if (strlen(countrycode)) {
-                CHG_DBG("%s: countrycode from proc is not null: %s!\n", __func__, countrycode);
-                strcpy(buf, countrycode);
-                goto out;
-        }
-
-
-	fp = filp_open(COUNTRY_CODE_PATH, O_RDONLY, 0);
-	if (IS_ERR_OR_NULL(fp)) {
-        	printk("[BAT][CHG] OPEN (%s) failed\n", COUNTRY_CODE_PATH);
-		if(--cnt >=0)
-			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(3000));
-		return ;	/*No such file or directory*/
-	}
-
-	/* For purpose that can use read/write system call */
-	if (fp->f_op != NULL) {
-		old_fs = get_fs();
-		set_fs(KERNEL_DS);		
-			
-		pos_lsts = 0;
-		readlen = vfs_read(fp, buf,strlen(buf), &pos_lsts);
-		if(readlen < 0) {
-			set_fs(old_fs);
-			filp_close(fp, NULL);	
-			printk("[BAT][CHG] Readlen <0\n");
-			if(--cnt >=0)
-			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(3000));
-			return ;
-		}			
-		buf[readlen]='\0';
-
-	} else {
-		printk("[BAT][CHG] Read (%s) error\n", COUNTRY_CODE_PATH);
-		if(--cnt >=0)
-			schedule_delayed_work(&smbchg_dev->read_countrycode_work, msecs_to_jiffies(3000));
-		return;
-	}
-	set_fs(old_fs);
-	filp_close(fp, NULL);
-
-out:
-	cnt =5; //reset
-	if (strcmp(buf, "BR") == 0)
-		BR_countrycode = COUNTRY_BR;
-	else if(strcmp(buf, "IN") == 0)
-		BR_countrycode = COUNTRY_IN;		
-	else
-		BR_countrycode = COUNTRY_OTHER;
-
-	CHG_DBG("country code : %s, type %d\n", buf, BR_countrycode);
-
-	return ;
-
-}
-
-// WeiYu: BR country code ---
-
 
 /*+++BSP Austin_T BMMI Adb Interface+++*/
 #define chargerIC_status_PROC_FILE	"driver/chargerIC_status"
@@ -4089,7 +3899,6 @@ static int smb2_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&chg->asus_usb_alert_work, asus_usb_alert_work);
 	INIT_DELAYED_WORK(&chg->asus_low_impedance_work, asus_low_impedance_work);
 	INIT_DELAYED_WORK(&chg->asus_water_proof_work, asus_water_proof_work);
-	INIT_DELAYED_WORK(&chg->read_countrycode_work, read_BR_countrycode_work);	// WeiYu: BR country code
 	//WeiYu : Add asus_workque ---
 
 	//WeiYu: handle asus gpio settings +++	
@@ -4114,14 +3923,7 @@ static int smb2_probe(struct platform_device *pdev)
 	if (rc)
 		goto cleanup;
 
-	//WeiYu: BR country code for icl table
-	schedule_delayed_work(&chg->read_countrycode_work, msecs_to_jiffies(30000));
-
 ////ASUS FEATURES ---
-
-/* Huaqin add for read countrycode by liunianliang at 2019/01/16 start */
-	init_proc_countrycode();
-/* Huaqin add for read countrycode by liunianliang at 2019/01/16 end */
 
 	smb2_create_debugfs(chip);
 

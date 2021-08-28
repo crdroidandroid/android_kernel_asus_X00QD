@@ -111,8 +111,7 @@ extern int gauge_get_prop;			// refer to batt_full_specified(). we want gauge ca
 extern struct smb_charger *smbchg_dev;
 extern struct gpio_control *global_gpio;	// global gpio_control
 extern struct timespec last_jeita_time;	// for jeita, asus_min_monitor_work
-static struct alarm bat_alarm;			// for jeita, asus_min_monitor_work
-extern int BR_countrycode;				
+static struct alarm bat_alarm;			// for jeita, asus_min_monitor_work				
 extern bool no_input_suspend_flag;		
 extern bool demo_app_property_flag;	
 extern bool usb_alert_flag;				 
@@ -4565,7 +4564,7 @@ void jeita_rule(void)
 	bat_capacity = asus_get_prop_batt_capacity(smbchg_dev);
 	state = smbchg_jeita_judge_state(state, bat_temp);
 	CHG_DBG("%s: batt_health = %s, temp = %d, volt = %d, ICL = 0x%x, COUT %d\n",
-		__func__, health_type[bat_health], bat_temp, bat_volt, ICL_reg, BR_countrycode);
+		__func__, health_type[bat_health], bat_temp, bat_volt, ICL_reg);
 
 	//ASUS JEITA 50-60 ISSUE 
 	//reset monitor and re-enable if it still in same logic
@@ -4889,9 +4888,6 @@ void reset_icl_for_nonstandard_ac(void){
 			else if (HVDCP_FLAG == 0 && UFP_FLAG == 2 && !LEGACY_CABLE_FLAG)
 
 				set_icl = ICL_1500mA;
-			else if((BR_countrycode == COUNTRY_BR || BR_countrycode == COUNTRY_IN)
-				&& HVDCP_FLAG == 0 && UFP_FLAG == 1)
-				set_icl = ICL_2000mA;
 			else
 				set_icl = ICL_1000mA;
 			break;
@@ -5597,9 +5593,6 @@ void asus_adapter_adc_work(struct work_struct *work)
 		else if (HVDCP_FLAG == 0 && UFP_FLAG == 2 && !LEGACY_CABLE_FLAG){
 			usb_max_current = ICL_1500mA;
 		}
-		else if((BR_countrycode == COUNTRY_BR || BR_countrycode == COUNTRY_IN)
-			&& HVDCP_FLAG == 0)
-			usb_max_current = ICL_2000mA;
 		else 
 			usb_max_current = ICL_1000mA;
 		break;
