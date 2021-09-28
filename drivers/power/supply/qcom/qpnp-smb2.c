@@ -77,7 +77,6 @@ extern bool asus_flow_done_flag;
 extern bool g_Charger_mode;			//from init/main.c
 extern int asus_CHG_TYPE;
 int qc_stat_registed = 0;
-bool demo_app_property_flag = 0;		// indicate it is demo phone, limit capacity for good battery life.
 bool smartchg_stop_flag = 0;			// for AP to make AC becoming non-charging
 bool no_input_suspend_flag = 0;		// for thermal test, make AC wont suspend(discharging)
 int thermal_inov_flag =0;
@@ -2581,29 +2580,6 @@ static ssize_t disable_input_suspend_show(struct device *dev, struct device_attr
 	return sprintf(buf, "%d\n", no_input_suspend_flag);
 }
 
-static ssize_t demo_app_property_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t len)
-{
-	int tmp = 0;
-
-	tmp = buf[0] - 48;
-
-	if (tmp == 0) {
-		demo_app_property_flag = false;
-		CHG_DBG("%s: demo_app_property_flag = 0\n", __func__);
-	} else if (tmp == 1) {
-		demo_app_property_flag = true;
-		CHG_DBG("%s: demo_app_property_flag = 1\n", __func__);
-    }
-
-	return len;
-}
-
-static ssize_t demo_app_property_show(struct device *dev, struct device_attribute *attr, char *buf)
-{
-       return sprintf(buf, "%d\n", demo_app_property_flag);
-}
-
 extern int asus_get_prop_batt_capacity(struct smb_charger *chg);
 static ssize_t charger_limit_enable_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t len)
@@ -2798,7 +2774,6 @@ static DEVICE_ATTR(TypeC_Side_Detect, 0664, TypeC_Side_Detect_show, NULL);
 static DEVICE_ATTR(asus_usb_suspend, 0664, asus_usb_suspend_show, asus_usb_suspend_store);
 static DEVICE_ATTR(CHG_TYPE, 0664, CHG_TYPE_show, NULL);
 static DEVICE_ATTR(disable_input_suspend, 0664, disable_input_suspend_show, disable_input_suspend_store);
-static DEVICE_ATTR(demo_app_property, 0664, demo_app_property_show, demo_app_property_store);
 static DEVICE_ATTR(charger_limit_enable, 0664, charger_limit_enable_show, charger_limit_enable_store);
 static DEVICE_ATTR(charger_limit_percent, 0664, charger_limit_percent_show, charger_limit_percent_store);
 static DEVICE_ATTR(smartchg_stop_charging, 0664, smartchg_stop_charging_show, smartchg_stop_charging_store);
@@ -2817,7 +2792,6 @@ static struct attribute *asus_smblib_attrs[] = {
 	&dev_attr_asus_usb_suspend.attr,
 	&dev_attr_CHG_TYPE.attr,
 	&dev_attr_disable_input_suspend.attr,
-	&dev_attr_demo_app_property.attr,
 	&dev_attr_charger_limit_enable.attr,
 	&dev_attr_charger_limit_percent.attr,
 	&dev_attr_smartchg_stop_charging.attr,

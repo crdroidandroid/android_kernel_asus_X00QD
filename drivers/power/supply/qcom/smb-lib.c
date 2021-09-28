@@ -112,8 +112,7 @@ extern struct smb_charger *smbchg_dev;
 extern struct gpio_control *global_gpio;	// global gpio_control
 extern struct timespec last_jeita_time;	// for jeita, asus_min_monitor_work
 static struct alarm bat_alarm;			// for jeita, asus_min_monitor_work				
-extern bool no_input_suspend_flag;		
-extern bool demo_app_property_flag;	
+extern bool no_input_suspend_flag;
 extern bool usb_alert_flag;				 
 extern bool smartchg_stop_flag;
 extern int32_t get_ID_vadc_voltage(void);
@@ -4156,41 +4155,6 @@ void asus_batt_RTC_work(struct work_struct *dat)
 	spin_unlock_irqrestore(&bat_alarm_slock, batflags);
 }
 
-/*+++ Add demo app read ADF function +++*/
-#define ADF_PATH "/ADF/ADF"
-static bool ADF_check_status(void)
-{
-    char buf[32];
-	struct file *fd;
-	struct inode *inode;
-	off_t fsize;
-	loff_t pos;
-	mm_segment_t old_fs;
-
-	fd = filp_open(ADF_PATH, O_RDONLY, 0);
-	if (IS_ERR_OR_NULL(fd)) {
-        CHG_DBG("%s: OPEN (%s) failed\n", __func__, ADF_PATH);
-		return false;
-    }
-
-	old_fs = get_fs();
-	set_fs(KERNEL_DS);
-	inode = fd->f_path.dentry->d_inode;
-	fsize = inode->i_size;
-	pos = 0;
-
-	vfs_read(fd, buf, fsize, &pos);
-
-	filp_close(fd, NULL);
-	set_fs(old_fs);
-
-	if (buf[3] == 1 || buf[3] == 2)
-		return true;
-	else
-		return false;
-}
-/*--- Add demo app read ADF function--- */
-
 /************************
  * ASUS CHARGER FLOW *
  ************************/
@@ -4371,11 +4335,6 @@ static int jeita_status_regs_write(u8 chg_en, u8 FV_CFG, u8 FCC)
 	return 0;
 }
 
-#define	DEMO_DISCHG_THD		60
-#define	DEMO_CHG_THD			55
-#define	DEMO_NON_CHG_THD	58
-int demo_chg_status = DEMO_NON_CHG_THD;
-
 //ASUS_BSP +++
 #define CHGLimit_PATH "/asdf/CHGLimit"
 #if 0
@@ -4539,8 +4498,6 @@ void jeita_rule(void)
 	u8 FCC_reg_value=0;
 	u8 FV_reg=0;
 	u8 ICL_reg=0;
-	bool demo_app_state_flag = 0;
-	bool demo_stop_charging_flag = 0;
 	bool ubatlife_stop_charging_flag = 0;
 	//bool suspend_dismiss to handle ubat_flag from 1 to 0
 	bool suspend_dismiss =0;
@@ -4706,31 +4663,7 @@ void jeita_rule(void)
 	}
 	// ASUS UTRA BATT LIFE ---
 
-	if (demo_app_property_flag) {
-		demo_app_state_flag = ADF_check_status();
-		if(demo_app_state_flag){
-
-			if(bat_capacity > DEMO_DISCHG_THD)
-				demo_chg_status = DEMO_DISCHG_THD;				
-			else if(bat_capacity >= DEMO_NON_CHG_THD)
-				demo_chg_status = DEMO_NON_CHG_THD;
-			// need not set status detween DEMO_CHG_THD and DEMO_NON_CHG_THD
-			else if(bat_capacity < DEMO_CHG_THD)
-				demo_chg_status = DEMO_CHG_THD;
-			else;
-
-			if(demo_chg_status == DEMO_DISCHG_THD)
-				smblib_set_usb_suspend(smbchg_dev, true);
-			else
-				smblib_set_usb_suspend(smbchg_dev, false);
-
-			if(demo_chg_status == DEMO_CHG_THD)
-				demo_stop_charging_flag = false;
-			else				
-				demo_stop_charging_flag = true;
-				
-		}
-	}else if (g_ubatterylife_enable_flag) {
+	 if (g_ubatterylife_enable_flag) {
 		if(bat_capacity > UBATLIFE_DISCHG_THD)	// >60%
 			ubatlife_chg_status = UBATLIFE_DISCHG_THD;
 		else if(bat_capacity < UBATLIFE_CHG_THD)	// <58%
@@ -4765,8 +4698,8 @@ void jeita_rule(void)
 	}else;
 	
 //Add smart charge & demo app judgment +++
-	if (smartchg_stop_flag || demo_stop_charging_flag || ubatlife_stop_charging_flag) {
-		CHG_DBG_EVT("%s: Stop charging, smart = %d, demo = %d, ubat = %d\n", __func__, smartchg_stop_flag, demo_stop_charging_flag, ubatlife_stop_charging_flag);
+	if (smartchg_stop_flag || ubatlife_stop_charging_flag) {
+		CHG_DBG_EVT("%s: Stop charging, smart = %d, ubat = %d\n", __func__, smartchg_stop_flag, ubatlife_stop_charging_flag);
 		charging_enable = EN_BAT_CHG_EN_COMMAND_FALSE;
 	}
 //Add smart charge judgment ---
