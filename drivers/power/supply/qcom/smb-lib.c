@@ -4782,48 +4782,10 @@ void reset_icl_for_nonstandard_ac(void){
 	if(dcp_like && !sdp_like){
 	switch (ASUS_ADAPTER_ID) {
 		case ASUS_750K:
-			if (HVDCP_FLAG == 0) {
-				asus_CHG_TYPE = ASUS_NORMAL_AC_ID;
-				if (UFP_FLAG ==3 && !LEGACY_CABLE_FLAG)
-					set_icl = ICL_3000mA;
-				else
-					set_icl = ICL_2000mA;
-			} else {
-				set_icl = ICL_1000mA;
-			}
-			break;
 		case ASUS_200K:
-			if (HVDCP_FLAG == 3) {
-				asus_CHG_TYPE = ASUS_QC_AC_ID;
-				set_icl = ICL_1900mA;
-			} else if (HVDCP_FLAG == 0 && UFP_FLAG == 3 && !LEGACY_CABLE_FLAG) {
-				set_icl = ICL_3000mA;
-			} else if (HVDCP_FLAG == 0 && UFP_FLAG == 2 && !LEGACY_CABLE_FLAG) {
-				set_icl = ICL_1500mA;
-			} else {
-				set_icl = ICL_1000mA;
-			}
-			break;
 		case PB:
-			if (HVDCP_FLAG == 0) {
-				if (UFP_FLAG == 3 && !LEGACY_CABLE_FLAG)
-					set_icl = ICL_3000mA;
-				else
-					set_icl = ICL_2000mA;
-			} else {
-				set_icl = ICL_1000mA;
-			}
-			break;
 		case OTHERS:
-			if(HVDCP_FLAG == 3)
-				set_icl = ICL_1500mA;
-			else if (HVDCP_FLAG == 0 && UFP_FLAG == 3 && !LEGACY_CABLE_FLAG)
-				set_icl = ICL_3000mA;
-			else if (HVDCP_FLAG == 0 && UFP_FLAG == 2 && !LEGACY_CABLE_FLAG)
-
-				set_icl = ICL_1500mA;
-			else
-				set_icl = ICL_1000mA;
+				set_icl = ICL_2000mA;
 			break;
 			/*
 		case ADC_NOT_READY:
