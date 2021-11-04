@@ -817,6 +817,10 @@ endif
 # Too much noisy and harmless to kill
 KBUILD_CFLAGS += $(call cc-disable-warning, format)
 
+# TODO: Find a fix for below warns
+KBUILD_CFLAGS += $(call cc-disable-warning, address)
+KBUILD_CFLAGS += $(call cc-disable-warning, array-compare)
+
 # These warnings generated too much noise in a regular build.
 # Use make W=1 to enable them (see scripts/Makefile.extrawarn)
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-but-set-variable)
