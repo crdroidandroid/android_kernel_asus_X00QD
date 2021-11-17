@@ -4189,11 +4189,9 @@ void asus_batt_RTC_work(struct work_struct *dat)
 //ASUS BSP Add per min monitor jeita & thermal & typeC_DFP +++
 void smblib_asus_monitor_start(struct smb_charger *chg, int time)
 {
-	#ifdef JEITA_AMT_ENABLE
 	asus_flow_done_flag = 1;
 	cancel_delayed_work(&chg->asus_min_monitor_work);
 	schedule_delayed_work(&chg->asus_min_monitor_work, msecs_to_jiffies(time));
-	#endif
 }
 
 #define EN_BAT_CHG_EN_COMMAND_TRUE		0
@@ -4202,7 +4200,6 @@ void smblib_asus_monitor_start(struct smb_charger *chg, int time)
 #define SMBCHG_FLOAT_VOLTAGE_VALUE_4P357		0x74 //ASUS_BSP battery safety upgrade
 #define SMBCHG_FLOAT_VOLTAGE_VALUE_4P305		0x6D //ASUS_BSP battery safety upgrade
 #define SMBCHG_FLOAT_VOLTAGE_VALUE_4P252		0x66 //ASUS_BSP battery safety upgrade
-#define SMBCHG_FAST_CHG_CURRENT_VALUE_0MA	0x00
 #define SMBCHG_FAST_CHG_CURRENT_VALUE_850MA 	0x22
 #define SMBCHG_FAST_CHG_CURRENT_VALUE_1475MA 	0x3B
 #define SMBCHG_FAST_CHG_CURRENT_VALUE_1500MA 	0x3C
@@ -4532,7 +4529,7 @@ void jeita_rule(void)
 	case JEITA_STATE_LESS_THAN_0:
 		charging_enable = EN_BAT_CHG_EN_COMMAND_FALSE;
 		FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
-		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_0MA;
+		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_850MA;
 		CHG_DBG("%s: temperature < 0\n", __func__);
 		break;
 	case JEITA_STATE_RANGE_0_to_100:
@@ -4593,7 +4590,7 @@ void jeita_rule(void)
 	case JEITA_STATE_LARGER_THAN_600:
 		charging_enable = EN_BAT_CHG_EN_COMMAND_FALSE;
 		FV_CFG_reg_value = g_fv_setting; //ASUS_BSP battery safety upgrade
-		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_0MA;
+		FCC_reg_value = SMBCHG_FAST_CHG_CURRENT_VALUE_1475MA;
 		CHG_DBG("%s: temperature >= 60\n", __func__);
 		break;
 	}
@@ -7734,9 +7731,7 @@ int smblib_init(struct smb_charger *chg)
 //ASUS work +++
 	INIT_DELAYED_WORK(&chg->asus_chg_flow_work, asus_chg_flow_work);
 	INIT_DELAYED_WORK(&chg->asus_adapter_adc_work, asus_adapter_adc_work);
-	#ifdef JEITA_AMT_ENABLE
 	INIT_DELAYED_WORK(&chg->asus_min_monitor_work, asus_min_monitor_work);
-	#endif
 	INIT_DELAYED_WORK(&chg->asus_qc3_soft_start_work, asus_qc3_soft_start_work);	
 	INIT_DELAYED_WORK(&chg->asus_batt_RTC_work, asus_batt_RTC_work);
 	INIT_DELAYED_WORK(&chg->asus_set_flow_flag_work, asus_set_flow_flag_work);
