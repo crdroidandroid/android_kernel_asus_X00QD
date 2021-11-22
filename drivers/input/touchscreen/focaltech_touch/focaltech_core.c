@@ -1889,7 +1889,7 @@ static int fts_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
         goto free_gpio;
     }
 
-    disable_irq_nosync(client->irq); // fix for waring Unblance enable for IRQ xxx & dump trace
+ //   disable_irq(client->irq);
 
 #if FTS_PSENSOR_EN
     if ( fts_sensor_init(data) != 0)
@@ -2335,7 +2335,6 @@ static int __init fts_ts_init(void)
     int ret = 0;
 
     printk(KERN_ERR"[JK] Focal init start  \n");
-printk("yk enter fts_ts_init\n");
 
 //    FTS_FUNC_ENTER();
     ret = i2c_add_driver(&fts_ts_driver);
