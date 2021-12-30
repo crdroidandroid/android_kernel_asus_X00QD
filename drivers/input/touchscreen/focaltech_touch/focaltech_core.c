@@ -1881,8 +1881,10 @@ static int fts_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
     pr_err("[FTS][tocuh] peint irq num info %d \n", client->irq);
 
     err = request_threaded_irq(client->irq, NULL, fts_ts_interrupt,
-                               pdata->irq_gpio_flags | IRQF_ONESHOT | IRQF_TRIGGER_FALLING,
-                               client->dev.driver->name, data);
+				pdata->irq_gpio_flags | IRQF_ONESHOT |
+				IRQF_TRIGGER_FALLING | IRQF_PERF_CRITICAL,
+				client->dev.driver->name, data);
+
     if (err)
     {
         pr_err("[FTS_err][tocuh] Request irq failed! \n");
