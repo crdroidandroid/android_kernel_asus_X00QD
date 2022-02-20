@@ -3817,7 +3817,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	rcu_assign_pointer(sbi->s_group_desc,
 			   ext4_kvmalloc(db_count *
 					  sizeof(struct buffer_head *),
-					  GFP_KERNEL);
+					  GFP_KERNEL));
 	if (sbi->s_group_desc == NULL) {
 		ext4_msg(sb, KERN_ERR, "not enough memory");
 		ret = -ENOMEM;
