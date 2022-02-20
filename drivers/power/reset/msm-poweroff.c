@@ -98,7 +98,6 @@ static int set_download_mode(char *str)
 }
 __setup("RDUMP=", set_download_mode);
 //--- ASUS_BSP : set download mode cmdline
->>>>>>> 7315f488df02 ([Q_SDM636_Ara_dev]Powerkey longpress feature)
 
 #ifdef CONFIG_QCOM_DLOAD_MODE
 #define EDL_MODE_PROP "qcom,msm-imem-emergency_download_mode"
