@@ -37,14 +37,6 @@
 #include "../base.h"
 #include "power.h"
 
-//ASUS_BSP +++
-/*[PM] pm_pwrcs_ret:
-	This flag mean dpm_suspend has been callback.
-	pm_pwrcs_ret will be cheked in function which is resume_console in printk.c
-*/
-unsigned int pm_pwrcs_ret=0;
-//ASUS_BSP ---
-
 typedef int (*pm_callback_t)(struct device *);
 
 /*
@@ -1555,7 +1547,6 @@ int dpm_suspend(pm_message_t state)
 		if (async_error)
 			break;
 	}
-	pm_pwrcs_ret = 1; //ASUS_BSP + [PM] This flag can check dpm_suspend state for resume_console in printk.c
 	mutex_unlock(&dpm_list_mtx);
 	async_synchronize_full();
 	if (!error)

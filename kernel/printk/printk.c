@@ -154,18 +154,6 @@ EXPORT_SYMBOL(console_set_on_cmdline);
 /* Flag: console code may call schedule() */
 static int console_may_schedule;
 
-#ifndef ASUS_USER_BUILD
-#ifdef CONFIG_BOOTDBGUART
-#ifdef ASUS_FTM_BUILD
-bool g_bootdbguart_y = false;  //flag which indicates if uart is disabled
-#else
-bool g_bootdbguart_y = true;  //flag which indicates if uart is enabled
-#endif
-static char g_console_setting[128];      //save the console string for further initial
-static bool g_console_inited = false;
-#endif
-#endif
-
 /*
  * The printk log buffer consists of a chain of concatenated variable
  * length records. Every record starts with a record header, containing
@@ -260,53 +248,6 @@ __packed __aligned(4)
  * console_unlock() or anything else that might wake up a process.
  */
 static DEFINE_RAW_SPINLOCK(logbuf_lock);
-static char *asus_log_buf = NULL;
-static bool is_logging_to_asus_buffer = false;
-void *memset_nc(void *s, int c, size_t count);
-
-/* this memcpy_nc() is for non cached memory */
-static void *memcpy_nc(void *dest, const void *src, size_t n)
-{
-	int i = 0;
-	u8 *d = (u8 *)dest, *s = (u8 *)src;
-	for (i = 0; i < n; i++)
-		d[i] = s[i];
-
-	return dest;
-}
-
-static int write_to_asus_log_buffer(const char *text, size_t text_len,
-				enum log_flags lflags) {
-	static ulong log_write_index = 0; /* the index to write the log in asus log buffer */
-	ulong *printk_buffer_slot2_addr = (ulong *)PRINTK_BUFFER_SLOT2;
-
-	if (!asus_log_buf) {
-		return -1;
-	}
-
-	if (log_write_index >= PRINTK_BUFFER_SLOT_SIZE) {
-		return -2;
-	}
-
-	if (log_write_index + text_len >= PRINTK_BUFFER_SLOT_SIZE) {
-		ulong part1 = PRINTK_BUFFER_SLOT_SIZE - log_write_index;
-		ulong part2 = text_len -part1;
-		memcpy_nc(asus_log_buf+log_write_index, text, part1);
-		memcpy_nc(asus_log_buf, text + part1, part2);
-		log_write_index = part2;
-	} else {
-		memcpy_nc(asus_log_buf+log_write_index, text, text_len);
-		log_write_index += text_len;
-	}
-
-	if (lflags & LOG_NEWLINE) {
-		asus_log_buf[log_write_index++] = '\n';
-		log_write_index = log_write_index % PRINTK_BUFFER_SLOT_SIZE;
-	}
-
-	*(printk_buffer_slot2_addr + 1) = log_write_index; /* ASUS_BSP For upload crash log to DroBox issue ( Remeber log buffer index ) */
-	return text_len;
-}
 
 #ifdef CONFIG_PRINTK
 DECLARE_WAIT_QUEUE_HEAD(log_wait);
@@ -1892,9 +1833,6 @@ asmlinkage int vprintk_emit(int facility, int level,
 	if (dict)
 		lflags |= LOG_PREFIX|LOG_NEWLINE;
 
-	if (is_logging_to_asus_buffer) {
-		write_to_asus_log_buffer(text, text_len, lflags);
-	}
 	if (!(lflags & LOG_NEWLINE)) {
 		/*
 		 * Flush the conflicting buffer. An earlier newline was missing,
@@ -1985,8 +1923,7 @@ asmlinkage int printk_emit(int facility, int level,
 	return r;
 }
 EXPORT_SYMBOL(printk_emit);
-extern int g_user_dbg_mode;
-extern unsigned int asusdebug_enable;
+
 int vprintk_default(const char *fmt, va_list args)
 {
 	int r;
@@ -2038,11 +1975,6 @@ asmlinkage __visible int printk(const char *fmt, ...)
 	va_list args;
 	int r;
 
-	if (asusdebug_enable==0x11223344)
-		return 0;
-
-	if (g_user_dbg_mode==0)
-		return 0;
 	va_start(args, fmt);
 
 	/*
@@ -2172,18 +2104,6 @@ static int __init console_setup(char *str)
 		return 1;
 	}
 
-#ifndef ASUS_USER_BUILD
-#ifdef CONFIG_BOOTUARTDBG
-	if (!g_bootdbguart_y) {
-		strncpy(g_console_setting, str, 128);
-		g_console_inited = false;
-		return 0;
-	} else {
-		g_console_inited = true;
-	}
-#endif
-#endif
-
 	if (_braille_console_setup(&str, &brl_options))
 		return 1;
 
@@ -2217,34 +2137,6 @@ static int __init console_setup(char *str)
 	return 1;
 }
 __setup("console=", console_setup);
-
-#ifndef ASUS_USER_BUILD
-#ifdef CONFIG_BOOTDBGUART
-/*
- * setup uart according to flags in command line
- */
-static int __init console_enable(char *str)
-{
-	int ret = 0;
-
-	if (!memcmp(str, "y", 1)) {
-
-		g_bootdbguart_y = true;
-		/* If console= get called after this, re-intial console */
-		if (g_console_inited == false) {
-			ret = console_setup(g_console_setting);
-		}
-
-	} else {
-		g_bootdbguart_y = false;
-	}
-
-	return ret;
-}
-__setup("bootdbguart=", console_enable);
-
-#endif
-#endif
 
 /**
  * add_preferred_console - add a device to the list of preferred consoles.
@@ -2285,8 +2177,6 @@ MODULE_PARM_DESC(console_suspend, "suspend console during suspend"
  */
 void suspend_console(void)
 {
-	ASUSEvtlog("[UTS] System Suspend\n");
-	nSuspendInProgress = 1;
 	if (!console_suspend_enabled)
 		return;
 	printk("Suspending console(s) (use no_console_suspend to debug)\n");
@@ -2297,24 +2187,6 @@ void suspend_console(void)
 
 void resume_console(void)
 {
-	int i; //ASUS_BSP +
-	nSuspendInProgress = 0;
-	ASUSEvtlog("[UTS] System Resume\n");
-
-//ASUS_BSP +++ [PM]Show GIC_IRQ wakeup information in AsusEvtlog
-	if (pm_pwrcs_ret) {
-		if (gic_irq_cnt > 0) {
-			for (i = 0; i < gic_irq_cnt; i++) {
-				ASUSEvtlog("[PM] IRQs triggered: %d\n", gic_resume_irq[i]);
-				//if (gic_resume_irq[i] == 222)
-					//ASUSEvtlog("[PM] SPMI name : %s", spmi_wakeup);
-			}
-			gic_irq_cnt = 0;  //clear log count
-		}
-		pm_pwrcs_ret = 0;
-	}
-//ASUS_BSP --- [PM]Show GIC_IRQ wakeup information in AsusEvtlog
-
 	if (!console_suspend_enabled)
 		return;
 	down_console_sem();
@@ -2704,14 +2576,6 @@ void register_console(struct console *newcon)
 	unsigned long flags;
 	struct console *bcon = NULL;
 	struct console_cmdline *c;
-
-#ifndef ASUS_USER_BUILD
-#ifdef CONFIG_BOOTDBGUART
-	if (!g_bootdbguart_y) {
-		return ;
-	}
-#endif
-#endif
 
 
 	if (console_drivers)
@@ -3397,25 +3261,3 @@ void show_regs_print_info(const char *log_lvl)
 }
 
 #endif
-void printk_buffer_rebase(void)
-{
-/*
- * This will NOT do real printk buffer rebase.
- * We just set a flag to let vprintk_emit() also write
- * kernel log to our remapped buffer.
- * Then we can save the content of our remapped buffer while rebooting
- * after the device crash.
- */
-	asus_log_buf = (char *) PRINTK_BUFFER_VA;
-	if (!asus_log_buf) {
-		printk("%s: asus_log_buf is NULL\n", __func__);
-		return;
-	}
-
-	if (!is_logging_to_asus_buffer)
-		memset_nc(asus_log_buf, 0, PRINTK_BUFFER_SLOT_SIZE);
-
-	is_logging_to_asus_buffer = true;
-
-}
-EXPORT_SYMBOL(printk_buffer_rebase);

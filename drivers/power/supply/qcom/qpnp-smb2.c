@@ -3198,11 +3198,7 @@ static irqreturn_t usb_temp_alert_interrupt(int irq, void *dev_id)
 		rc = smblib_masked_write(smbchg_dev, CMD_OTG_REG, OTG_EN_BIT, 0);
 		if (rc < 0)
 			dev_err(smbchg_dev->dev, "Couldn't set CMD_OTG_REG rc=%d\n", rc);
-			CHG_DBG_EVT("%s: switch %d, cable %d\n", __func__, status, usb_otg_present);
-#ifdef ASUSERRCLOG
-		ASUSErclog(ASUS_USB_THERMAL_ALERT, "Thermal Alert is triggered, cable %d otg %d\n",
-			usb_otg_present,otg_reg);
-#endif			
+			CHG_DBG_EVT("%s: switch %d, cable %d\n", __func__, status, usb_otg_present);		
 	} else {
 		if (usb_otg_present){
 			switch_set_state(&usb_alert_dev, THM_ALERT_NONE);
@@ -3214,9 +3210,6 @@ static irqreturn_t usb_temp_alert_interrupt(int irq, void *dev_id)
 				dev_err(smbchg_dev->dev, "Couldn't set CMD_OTG_REG rc=%d\n", rc);		
 			CHG_DBG_EVT("%s: switch %d, cable %d, enable charger \n", __func__, status, usb_otg_present);
 		}
-//#ifdef ASUSERRCLOG		
-		ASUSErclog(ASUS_USB_THERMAL_ALERT, "Thermal Alert is dismissed\n");
-//#endif
 	}
 
 	return IRQ_HANDLED;

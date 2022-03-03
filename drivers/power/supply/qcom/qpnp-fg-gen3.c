@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2016-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -7458,21 +7458,6 @@ static void create_batt_cycle_count_proc_file(void)
 		asus_batt_cycle_count_dir, &batt_safety_csc_fops);
 	struct proc_dir_entry *asus_batt_safety_condition_proc_file = proc_create("condition_value", 0666,
 		asus_batt_cycle_count_dir, &condition_value_fops);
-	struct proc_dir_entry *batt_health_config_proc_file = proc_create("batt_health_config", 0666,
-		asus_batt_cycle_count_dir, &batt_health_config_fops);
-
-	if (!asus_batt_cycle_count_dir)
-		printk("batt_cycle_count_dir create failed!\n");
-	if (!asus_batt_cycle_count_proc_file)
-		printk("batt_cycle_count_proc_file create failed!\n");
-	if(!asus_batt_batt_safety_proc_file)
-		printk("batt_safety_proc_file create failed!\n");
-	if(!asus_batt_batt_safety_csc_proc_file)
-		printk("batt_safety_csc_proc_file create failed!\n");
-	if (!asus_batt_safety_condition_proc_file)
-		printk(" create asus_batt_safety_condition_proc_file failed!\n");
-	if (!batt_health_config_proc_file)
-		printk(" create batt_health_config_proc_file failed!\n");
 }
 
 //Write back batt_cyclecount data before restart/shutdown 
@@ -7502,188 +7487,6 @@ static struct notifier_block fb_notifier = {
 };
 //ASUS_BSP display callback function ---
 //ASUS_BSP ---
-
-//[+++]Add log to show charging status in ASUSEvtlog.txt
-static char *charging_stats[] = {
-	"UNKNOWN",
-	"CHARGING",
-	"DISCHARGING",
-	"NOT_CHARGING",
-	"FULL",
-	"QUICK_CHARGING",
-	"NOT_QUICK_CHARGING"
-};
-static char *charging_mode[] = {
-	"UNKNOWN",
-	"NONE",
-	"TRICKLE",
-	"FAST",
-	"TAPER"
-};
-
-extern char *ufp_type[];
-extern char *health_type[];
-//[---]Add log to show charging status in ASUSEvtlog.txt
-
-//[+++]Add log to show charging status/type in ASUSEvtlog.txt
-static int get_bat_charging_status(struct fg_chip *chip)
-{
-	int rc = 0;
-	union power_supply_propval prop = {0, };
-
-	if (!chip->batt_psy)
-		chip->batt_psy = power_supply_get_by_name("battery");
-
-	if (chip->batt_psy) {
-		rc = chip->batt_psy->desc->get_property(chip->batt_psy,
-				POWER_SUPPLY_PROP_STATUS,
-				&prop);
-		if (rc)
-			pr_err("could't get charging status : %d\n", rc);
-	}
-	return prop.intval;
-}
-static int get_bat_charging_mode(struct fg_chip *chip)
-{
-	int rc = 0;
-	union power_supply_propval prop = {0, };
-
-	if (!chip->batt_psy)
-		chip->batt_psy = power_supply_get_by_name("battery");
-
-	if (chip->batt_psy) {
-		rc = chip->batt_psy->desc->get_property(chip->batt_psy,
-				POWER_SUPPLY_PROP_CHARGE_TYPE,
-				&prop);
-		if (rc)
-			pr_err("could't get charging mode : %d\n", rc);
-	}
-	return prop.intval;
-}
-//[---]Add log to show charging status/type in ASUSEvtlog.txt
-
-
-
-//[+++]Add to print the gauge status regularly
-static struct delayed_work update_gauge_status_work;
-static struct timespec g_last_print_time;
-void qpnp_smbcharger_polling_data_worker(int time);
-
-#ifdef ASUS_ZE620KL_PROJECT
-extern const char *asus_get_apsd_result(void);
-extern int asus_get_ufp_mode(void);
-extern int asus_get_batt_health(void);
-#endif
-
-static int print_battery_status(void) {
-	int bat_vol, bat_cur, bat_cap, bat_temp;
-	char battInfo[256], additionBattInfo[256];
-	int charge_status, charge_mode, mSoc = 0, bSoc = 0, cSoc = 0, ocv = 0, rc=0;
-	u8 socSts = 0, battSts = 0;
-
-#ifdef ASUS_ZE620KL_PROJECT	
-	const char *apsd_result;
-	int ufp_mode =0;
-	int bat_health =0;
-#endif
-
-	fg_get_battery_voltage(g_fgChip, &bat_vol);
-	fg_get_battery_current(g_fgChip, &bat_cur);
-	fg_get_prop_capacity(g_fgChip, &bat_cap);
-	fg_get_battery_temp(g_fgChip, &bat_temp);
-	
-	charge_status = get_bat_charging_status(g_fgChip);
-	charge_mode = get_bat_charging_mode(g_fgChip);
-
-#ifdef ASUS_ZE620KL_PROJECT	
-	apsd_result = asus_get_apsd_result();
-	ufp_mode = asus_get_ufp_mode();
-	bat_health = asus_get_batt_health();
-#endif
-
-	rc = fg_read(g_fgChip, BATT_INFO_INT_RT_STS(g_fgChip), &battSts, 1);
-	rc = fg_read(g_fgChip, BATT_SOC_INT_RT_STS(g_fgChip), &socSts, 1);
-
-	fg_get_msoc_raw(g_fgChip, &mSoc);
-	fg_get_sram_prop(g_fgChip, FG_SRAM_BATT_SOC, &bSoc);
-	fg_get_charge_counter(g_fgChip, &cSoc);	
-	fg_get_sram_prop(g_fgChip, FG_SRAM_OCV, &ocv);
-	bSoc = (u32)bSoc >> 24;
-
-	
-	snprintf(battInfo, sizeof(battInfo), "report Capacity ==>%d, FCC:%dmAh, BMS:%d, V:%dmV, Cur:%dmA, ",
-		bat_cap,
-		(int)g_fgChip->cl.nom_cap_uah/1000,
-		bat_cap,
-		bat_vol/1000,
-		bat_cur/1000);
-	
-#ifdef ASUS_ZE620KL_PROJECT	
-	snprintf(battInfo, sizeof(battInfo), "%sTemp:%d.%dC, BATID:%d, CHG_Status:%d(%s), CHG_Mode:%s, APSD_Result:%s, UFP_Mode:%s, BAT_HEALTH:%s\n",
-		battInfo,
-		bat_temp/10,
-		bat_temp%10,
-		g_fgChip->batt_id_ohms,
-		charge_status,
-		charging_stats[charge_status],
-		charging_mode[charge_mode],
-		apsd_result,
-		ufp_type[ufp_mode],
-		health_type[bat_health]);
-#else
-	snprintf(battInfo, sizeof(battInfo), "%sTemp:%d.%dC, BATID:%d, CHG_Status:%d(%s), CHG_Mode:%s\n",
-		battInfo,
-		bat_temp/10,
-		bat_temp%10,
-		g_fgChip->batt_id_ohms,
-		charge_status,
-		charging_stats[charge_status],
-		charging_mode[charge_mode]);
-
-#endif
-
-	snprintf(additionBattInfo, sizeof(additionBattInfo), "csoc=%d, bsoc=%d, msoc=%d, ocv=%d, SocSts=%x, BatSts=%x\n",
-		cSoc,
-		bSoc,
-		mSoc,
-		ocv,
-		socSts,
-		battSts);
-
-	ASUSEvtlog("[BAT][Ser]%s", battInfo); 
-	BAT_DBG("%s: %s", __func__, battInfo);	
-	BAT_DBG("%s: %s", __func__, additionBattInfo);
-	g_last_print_time = current_kernel_time();
-	return 0;
-}
-void qpnp_smbcharger_polling_data_worker(int time) {
-	cancel_delayed_work(&update_gauge_status_work);
-	schedule_delayed_work(&update_gauge_status_work, time * HZ);
-}
-void static update_gauge_status_worker(struct work_struct *dat)
-{
-	int ret = 0;
-
-	/*
-	if (!g_fgChip->profile_loaded) {
-		BAT_DBG("%s: profile not loaded yet, delay 5s\n", __func__);
-		qpnp_smbcharger_polling_data_worker(5);
-	} else{
-	*/
-	
-		ret = print_battery_status();
-		if (ret == 0) {
-			qpnp_smbcharger_polling_data_worker(180);
-		} else{
-			BAT_DBG("%s: charger not ready yet, delay 5s\n", __func__);
-			qpnp_smbcharger_polling_data_worker(5);
-		}
-	//}
-}
-//[---]Add to print the gauge status regularly
-
-
-//[---]Add to print the gauge status regularly
 
 struct switch_dev batt_dev;
 static ssize_t batt_switch_name_Titan(struct switch_dev *sdev, char *buf)
@@ -7820,8 +7623,6 @@ backup_asus_capacity_work	backup delta_soc
 */
 void probe_init_asus_works(void)
 {
-
-	INIT_DELAYED_WORK(&update_gauge_status_work, update_gauge_status_worker); // workqueue for print fuel gauge status  in every 3min
 	INIT_DELAYED_WORK(&fix_maint_soc_work, fix_maint_soc_worker);
 	INIT_DELAYED_WORK(&regular_check_soc_work, regular_check_soc_worker);
 
@@ -8165,7 +7966,6 @@ static int fg_gen3_probe(struct platform_device *pdev)
 	//ASUS_BSP battery safety upgrade +++
 	init_battery_safety(chip);
 	//init_batt_cycle_count_data();
-	create_batt_cycle_count_proc_file();
 	register_reboot_notifier(&reboot_blk);
 	schedule_delayed_work(&battery_safety_work, 30 * HZ);
 	//ASUS_BSP battery safety upgrade ---
@@ -8187,7 +7987,6 @@ static int fg_gen3_probe(struct platform_device *pdev)
 
 //ASUS_BSP +++
 	probe_create_procs();		
-	qpnp_smbcharger_polling_data_worker(5);//Start the status report of fuel gauge
 
 	schedule_delayed_work(&regular_check_soc_work, SOC_CHECK_INTERVAL * HZ);
 	schedule_delayed_work(&init_asus_capacity_work, 5* HZ);
@@ -8241,19 +8040,6 @@ static int fg_gen3_resume(struct device *dev)
 	struct fg_chip *chip = dev_get_drvdata(dev);
 	int rc;
 
-//ASUS_BSP +++
-	struct timespec mtNow;
-
-	mtNow = current_kernel_time();
-	if (mtNow.tv_sec - g_last_print_time.tv_sec >= REPORT_CAPACITY_POLLING_TIME) {
-		qpnp_smbcharger_polling_data_worker(0);
-	}
-
-	if (mtNow.tv_sec - g_prev_check_soc_time.tv_sec >= SOC_CHECK_INTERVAL) {
-		cancel_delayed_work(&regular_check_soc_work);
-		schedule_delayed_work(&regular_check_soc_work, 0);
-	}
-//ASUS_BSP ---
 	rc = fg_esr_timer_config(chip, false);
 	if (rc < 0)
 		pr_err("Error in configuring ESR timer, rc=%d\n", rc);
