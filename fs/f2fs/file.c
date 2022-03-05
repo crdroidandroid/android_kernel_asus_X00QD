@@ -2750,54 +2750,43 @@ int f2fs_pin_file_control(struct inode *inode, bool inc)
 static int f2fs_ioc_set_pin_file(struct file *filp, unsigned long arg)
 {
 	struct inode *inode = file_inode(filp);
-        struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	__u32 pin;
 	int ret = 0;
 
-	if (get_user(pin, (__u32 __user *)arg)){
-        f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+	if (get_user(pin, (__u32 __user *)arg))
 		return -EFAULT;
-        }
 
-	if (!S_ISREG(inode->i_mode)){
-        f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+	if (!S_ISREG(inode->i_mode))
 		return -EINVAL;
-        }
-	if (f2fs_readonly(F2FS_I_SB(inode)->sb)){
-       f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+
+	if (f2fs_readonly(F2FS_I_SB(inode)->sb))
 		return -EROFS;
-        }
+
 	ret = mnt_want_write_file(filp);
-	if (ret){
-       f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+	if (ret)
 		return ret;
-        }
+
 	inode_lock(inode);
 
 	if (f2fs_should_update_outplace(inode, NULL)) {
-        f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
 		ret = -EINVAL;
 		goto out;
 	}
 
 	if (!pin) {
-        f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
 		clear_inode_flag(inode, FI_PIN_FILE);
 		f2fs_i_gc_failures_write(inode, 0);
 		goto done;
 	}
 
 	if (f2fs_pin_file_control(inode, false)) {
-        f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
 		ret = -EAGAIN;
 		goto out;
 	}
 	ret = f2fs_convert_inline_inode(inode);
-	if (ret){
-       f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+	if (ret)
 		goto out;
-        }
-      f2fs_warn(sbi, "%s --- %d", __func__, __LINE__);
+
 	set_inode_flag(inode, FI_PIN_FILE);
 	ret = F2FS_I(inode)->i_gc_failures[GC_FAILURE_PIN];
 done:
